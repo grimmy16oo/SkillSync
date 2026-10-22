@@ -1,0 +1,565 @@
+import {
+  CalendarPlus,
+  CheckCircle2,
+  Code2,
+  Database,
+  FileText,
+  FileUp,
+  Sparkles,
+  Star,
+  Trophy,
+  UserRound,
+} from "lucide-react";
+
+export const courses = [
+  {
+    title: "React & Web Development",
+    category: "Web Development",
+    skills: ["React", "JavaScript"],
+    description:
+      "Build real, deployable web apps with React, hooks and REST APIs. Weekly live builds, code reviews from a senior, and a final team project.",
+    teacher: "Tanvir Ahmed",
+    initials: "TA",
+    learners: 128,
+    rating: "4.9",
+    icon: Code2,
+    tone: "violet",
+    featured: true,
+  },
+  {
+    title: "Python Fundamentals",
+    category: "Programming",
+    skills: ["Python"],
+    description:
+      "From variables to OOP, with weekly problem sets and lab sessions.",
+    teacher: "Nabil Rahman",
+    initials: "NR",
+    learners: 214,
+    rating: "4.8",
+    icon: Code2,
+    tone: "mint",
+  },
+  {
+    title: "Database Design",
+    category: "Data & Databases",
+    skills: ["SQL"],
+    description:
+      "ER modeling, normalization and SQL you will actually use in projects.",
+    teacher: "Sadia Karim",
+    initials: "SK",
+    learners: 96,
+    rating: "4.7",
+    icon: Database,
+    tone: "blue",
+  },
+  {
+    title: "Machine Learning Basics",
+    category: "AI / ML",
+    skills: ["Python", "scikit-learn"],
+    description:
+      "Regression, classification and model evaluation with scikit-learn.",
+    teacher: "Fahim Islam",
+    initials: "FI",
+    learners: 173,
+    rating: "4.9",
+    icon: Sparkles,
+    tone: "gold",
+  },
+  {
+    title: "UI/UX for Developers",
+    category: "Design",
+    skills: ["Figma"],
+    description:
+      "Design clean interfaces for your projects without being a designer.",
+    teacher: "May Chowdhury",
+    initials: "MC",
+    learners: 5,
+    rating: "4.8",
+    icon: Sparkles,
+    tone: "coral",
+  },
+  {
+    title: "Java Programming",
+    category: "Programming",
+    skills: ["Java"],
+    description:
+      "Core Java, collections and OOP patterns for your data structures course.",
+    teacher: "May Chowdhury",
+    initials: "MC",
+    learners: 3,
+    rating: "4.7",
+    icon: Code2,
+    tone: "green",
+  },
+  {
+    title: "Graphic Design for CSE Students",
+    category: "Design",
+    skills: ["Figma"],
+    description:
+      "Posters, slides and portfolio visuals that make your work stand out.",
+    teacher: "Lamia Mahmud",
+    initials: "LM",
+    learners: 61,
+    rating: "4.6",
+    icon: Sparkles,
+    tone: "lavender",
+  },
+];
+export const categories = [
+  "All",
+  "Programming",
+  "Web Development",
+  "Data & Databases",
+  "AI / ML",
+  "Design",
+];
+export const skills = [
+  "Python",
+  "React",
+  "SQL",
+  "Java",
+  "Figma",
+  "scikit-learn",
+];
+
+export const learningCourses = [
+  {
+    title: "Python Fundamentals",
+    instructor: "Nabil Rahman",
+    week: "WEEK 6 OF 8",
+    lessons: "18 of 25 lessons",
+    percent: 72,
+    icon: Code2,
+    tone: "mint",
+    status: "In progress",
+  },
+  {
+    title: "React & Web Development",
+    instructor: "Tanvir Ahmed",
+    week: "WEEK 3 OF 6",
+    lessons: "8 of 20 lessons",
+    percent: 40,
+    icon: Sparkles,
+    tone: "lavender",
+    status: "In progress",
+  },
+  {
+    title: "Database Design",
+    instructor: "Sadia Karim",
+    week: "WEEK 1 OF 6",
+    lessons: "3 of 18 lessons",
+    percent: 15,
+    icon: Database,
+    tone: "blue",
+    status: "In progress",
+  },
+  {
+    title: "UI/UX for Developers",
+    instructor: "May Chowdhury",
+    week: "COMPLETED",
+    lessons: "16 of 16 lessons",
+    percent: 100,
+    icon: Sparkles,
+    tone: "coral",
+    status: "Completed",
+  },
+  {
+    title: "Java Programming",
+    instructor: "Lamia Mahmud",
+    week: "COMPLETED",
+    lessons: "20 of 20 lessons",
+    percent: 100,
+    icon: Code2,
+    tone: "gold",
+    status: "Completed",
+  },
+  {
+    title: "Git & GitHub Essentials",
+    instructor: "Aminul Islam",
+    week: "COMPLETED",
+    lessons: "12 of 12 lessons",
+    percent: 100,
+    icon: Code2,
+    tone: "blue",
+    status: "Completed",
+  },
+  {
+    title: "Data Structures",
+    instructor: "Nusrat Jahan",
+    week: "COMPLETED",
+    lessons: "18 of 18 lessons",
+    percent: 100,
+    icon: Database,
+    tone: "mint",
+    status: "Completed",
+  },
+  {
+    title: "Computer Networks",
+    instructor: "Rafi Hasan",
+    week: "COMPLETED",
+    lessons: "14 of 14 lessons",
+    percent: 100,
+    icon: Database,
+    tone: "lavender",
+    status: "Completed",
+  },
+  {
+    title: "Figma for Beginners",
+    instructor: "Lamia Mahmud",
+    week: "COMPLETED",
+    lessons: "10 of 10 lessons",
+    percent: 100,
+    icon: Sparkles,
+    tone: "coral",
+    status: "Completed",
+  },
+  {
+    title: "Machine Learning Basics",
+    instructor: "Fahim Islam",
+    week: "SAVED FOR LATER",
+    lessons: "Starts next month",
+    percent: 0,
+    icon: Sparkles,
+    tone: "green",
+    status: "Saved",
+  },
+  {
+    title: "Cloud Computing Intro",
+    instructor: "Nabil Rahman",
+    week: "SAVED FOR LATER",
+    lessons: "Starts in 2 weeks",
+    percent: 0,
+    icon: Database,
+    tone: "blue",
+    status: "Saved",
+  },
+  {
+    title: "Algorithms in Python",
+    instructor: "Tanvir Ahmed",
+    week: "SAVED FOR LATER",
+    lessons: "Starts next month",
+    percent: 0,
+    icon: Code2,
+    tone: "gold",
+    status: "Saved",
+  },
+  {
+    title: "Mobile App Design",
+    instructor: "May Chowdhury",
+    week: "SAVED FOR LATER",
+    lessons: "Starts soon",
+    percent: 0,
+    icon: Sparkles,
+    tone: "coral",
+    status: "Saved",
+  },
+];
+
+export const teachingSeed = [
+  {
+    title: "UI/UX for Developers",
+    category: "Design",
+    week: "Week 3 of 6",
+    tone: "coral",
+    icon: Sparkles,
+    learners: 5,
+    pending: 3,
+    rating: "4.8",
+    requests: [
+      {
+        id: 2,
+        initials: "AH",
+        name: "Arif Hasan",
+        meta: "CSE, 2nd year · 1 hour ago",
+      },
+      {
+        id: 3,
+        initials: "ZI",
+        name: "Zarif Iqbal",
+        meta: "CSE, 2nd year · Yesterday",
+      },
+      {
+        id: 4,
+        initials: "TM",
+        name: "Tasnim Mir",
+        meta: "CSE, 1st year · 2 days ago",
+      },
+    ],
+  },
+  {
+    title: "Java Programming",
+    category: "Programming",
+    week: "Week 1 of 8",
+    tone: "mint",
+    icon: Code2,
+    learners: 3,
+    pending: 1,
+    rating: "4.7",
+    requests: [
+      {
+        id: 1,
+        initials: "RS",
+        name: "Riya Sen",
+        meta: "CSE, 1st year · 2 min ago",
+      },
+    ],
+    draft: "Draft: Data Structures in Java",
+  },
+];
+
+export const initialReceived = [
+  {
+    id: 1,
+    initials: "RS",
+    name: "Riya Sen",
+    meta: "CSE, 1st year · 2 min ago",
+    course: "Java Programming",
+    tone: "mint",
+    message:
+      "I’m struggling with OOP in my DS course and want hands-on practice.",
+  },
+  {
+    id: 2,
+    initials: "AH",
+    name: "Arif Hasan",
+    meta: "CSE, 2nd year · 1 hour ago",
+    course: "UI/UX for Developers",
+    tone: "coral",
+    message: "Want my thesis app to look less like a 2005 website.",
+  },
+  {
+    id: 3,
+    initials: "ZI",
+    name: "Zarif Iqbal",
+    meta: "CSE, 2nd year · Yesterday",
+    course: "UI/UX for Developers",
+    tone: "blue",
+    message: "",
+  },
+  {
+    id: 4,
+    initials: "TM",
+    name: "Tasnim Mir",
+    meta: "CSE, 1st year · 2 days ago",
+    course: "UI/UX for Developers",
+    tone: "gold",
+    message: "",
+  },
+];
+export const initialRequestBuckets = {
+  received: initialReceived,
+  accepted: [
+    {
+      id: 11,
+      initials: "NK",
+      name: "Nafis Karim",
+      meta: "CSE, 3rd year · Oct 19",
+      course: "Python Fundamentals",
+      tone: "mint",
+    },
+  ],
+  declined: [
+    {
+      id: 12,
+      initials: "MA",
+      name: "Maliha Ahmed",
+      meta: "CSE, 2nd year · Oct 17",
+      course: "Java Programming",
+      tone: "blue",
+    },
+  ],
+};
+export const initialSentRequests = [
+  {
+    title: "Machine Learning Basics",
+    teacher: "Fahim Islam",
+    meta: "sent 1 day ago",
+    status: "Pending",
+    tone: "gold",
+    icon: Sparkles,
+  },
+  {
+    title: "React & Web Development",
+    teacher: "Tanvir Ahmed",
+    meta: "3 hours ago",
+    status: "Accepted",
+    tone: "lavender",
+    icon: Code2,
+  },
+  {
+    title: "Graphic Design for CSE",
+    teacher: "Lamia Mahmud",
+    meta: "Oct 12",
+    status: "Course full",
+    tone: "coral",
+    icon: Sparkles,
+  },
+];
+
+export const classroomMaterials = [
+  {
+    title: "Week 6 · Functions and Scope",
+    type: "PDF",
+    size: "2.4 MB",
+    time: "Yesterday",
+    icon: FileText,
+    tone: "coral",
+  },
+  {
+    title: "Problem Set 5 · Starter code",
+    type: "ZIP",
+    size: "340 KB",
+    time: "3 days ago",
+    icon: Code2,
+    tone: "blue",
+  },
+  {
+    title: "Week 5 · Lists and Dictionaries",
+    type: "Slides",
+    size: "5.1 MB",
+    time: "1 week ago",
+    icon: FileText,
+    tone: "lavender",
+  },
+];
+export const classroomMembers = [
+  { name: "Nabil Rahman", role: "Instructor", initials: "NR", tone: "mint" },
+  {
+    name: "Riya Sen",
+    role: "Student · CSE, 1st year",
+    initials: "RS",
+    tone: "coral",
+  },
+  {
+    name: "Arif Hasan",
+    role: "Student · CSE, 2nd year",
+    initials: "AH",
+    tone: "lavender",
+  },
+  {
+    name: "Nafis Karim",
+    role: "Student · CSE, 3rd year",
+    initials: "NK",
+    tone: "gold",
+  },
+  {
+    name: "Tasnim Mir",
+    role: "Student · CSE, 1st year",
+    initials: "TM",
+    tone: "blue",
+  },
+  {
+    name: "Zarif Iqbal",
+    role: "Student · CSE, 2nd year",
+    initials: "ZI",
+    tone: "mint",
+  },
+];
+
+export const notificationSeed = [
+  {
+    id: 1,
+    requestId: 1,
+    group: "Today",
+    type: "Requests",
+    icon: UserRound,
+    initials: "RS",
+    message: (
+      <>
+        <strong>Riya</strong> requested to join{" "}
+        <strong>Java Programming.</strong>
+      </>
+    ),
+    time: "2 min ago",
+    unread: true,
+    action: "Accept",
+    tone: "lavender",
+  },
+  {
+    id: 2,
+    group: "Today",
+    type: "Requests",
+    icon: CheckCircle2,
+    message: (
+      <>
+        Your request for <strong>Web Development</strong> was accepted.
+      </>
+    ),
+    time: "3 hours ago",
+    unread: true,
+    tone: "mint",
+  },
+  {
+    id: 3,
+    group: "Today",
+    type: "Meetings",
+    icon: CalendarPlus,
+    message: (
+      <>
+        A new meeting has been scheduled:{" "}
+        <strong>Lab 7 · Loops in practice.</strong>
+      </>
+    ),
+    time: "5 hours ago",
+    unread: true,
+    tone: "lavender",
+  },
+  {
+    id: 4,
+    group: "Yesterday",
+    type: "Courses",
+    icon: FileUp,
+    message: (
+      <>
+        <strong>Nabil</strong> uploaded{" "}
+        <strong>Week 6 · Functions and Scope</strong> to Python Fundamentals.
+      </>
+    ),
+    time: "Yesterday",
+    unread: false,
+    tone: "gold",
+  },
+  {
+    id: 5,
+    group: "Yesterday",
+    type: "Courses",
+    icon: Star,
+    message: (
+      <>
+        <strong>Arif</strong> rated <strong>UI/UX for Developers</strong> 5
+        stars.
+      </>
+    ),
+    time: "Yesterday",
+    unread: false,
+    tone: "lavender",
+  },
+  {
+    id: 6,
+    group: "This week",
+    type: "Courses",
+    icon: Trophy,
+    message: (
+      <>
+        You hit <strong>70% progress</strong> in Python Fundamentals.
+      </>
+    ),
+    time: "Oct 17",
+    unread: false,
+    tone: "mint",
+  },
+  {
+    id: 7,
+    group: "This week",
+    type: "Meetings",
+    icon: CalendarPlus,
+    message: (
+      <>
+        Your <strong>Python lab recording</strong> is ready to watch.
+      </>
+    ),
+    time: "Oct 16",
+    unread: false,
+    tone: "blue",
+  },
+];
