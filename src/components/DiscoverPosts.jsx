@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Archive, ArrowDownToLine, BookOpen, FileText, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { AlertCircle, Archive, ArrowDownToLine, FileText, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
-import { getUserName } from "../app/userProfile.js";
+import { getUserInitials, getUserName } from "../app/userProfile.js";
 
 const BUCKET = "post-attachments";
 const MAX_FILE_BYTES = 10_485_760;
@@ -32,7 +32,14 @@ function safeFilename(name) {
   return name.normalize("NFKD").replace(/[^\w.-]+/g, "_").replace(/^\.+/, "").slice(-120) || "attachment";
 }
 
-function DiscoverPosts({ user, sessionReady, startCoursePost, onComposerOpened, onLogin, onSignup }) {
+function formatPostDate(value) {
+  if (!value) return "Date unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onComposerOpened, onLogin, onSignup }) {
   const [posts, setPosts] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [profiles, setProfiles] = useState({});
@@ -41,11 +48,9 @@ function DiscoverPosts({ user, sessionReady, startCoursePost, onComposerOpened, 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [editorOpen, setEditorOpen] = useState(startCoursePost);
+  const [editorOpen, setEditorOpen] = useState(startPost);
   const [editingPostId, setEditingPostId] = useState(null);
-  const [postType, setPostType] = useState(startCoursePost ? "course" : "post");
-  const [postingRole, setPostingRole] = useState("");
-  const [title, setTitle] = useState("");
+  const [postingRole, setPostingRole] = useState(startPostRole || "");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -96,27 +101,23 @@ function DiscoverPosts({ user, sessionReady, startCoursePost, onComposerOpened, 
     ? posts.filter(post => post.user_id === user?.id)
     : posts.filter(post => post.status === "published"), [posts, tab, user]);
 
-  const beginCreate = (type = "post") => {
+  const beginCreate = () => {
     setEditingPostId(null);
-    setPostType(type);
     setPostingRole(roles.includes("learner") ? "learner" : "instructor");
-    setTitle(""); setDescription(""); setFiles([]); setError(""); setNotice(""); setEditorOpen(true);
+    setDescription(""); setFiles([]); setError(""); setNotice(""); setEditorOpen(true);
   };
 
   const beginEdit = post => {
-    const parsed = post.description.match(/^Course: (.*?)\n\n([\s\S]*)$/);
     setEditingPostId(post.post_id);
-    setPostType(parsed ? "course" : "post");
-    setTitle(parsed?.[1] || "");
-    setDescription(parsed?.[2] ?? post.description);
+    setDescription(post.description);
     setPostingRole(post.posting_role);
     setFiles([]); setError(""); setNotice(""); setEditorOpen(true);
   };
 
   useEffect(() => {
-    if (!startCoursePost || !sessionReady || !user || loading) return;
+    if (!startPost || !sessionReady || !user || loading) return;
     onComposerOpened();
-  }, [startCoursePost, sessionReady, user, loading, onComposerOpened]);
+  }, [startPost, sessionReady, user, loading, onComposerOpened]);
 
   const handleFiles = event => {
     const chosen = [...event.target.files];
@@ -142,9 +143,9 @@ function DiscoverPosts({ user, sessionReady, startCoursePost, onComposerOpened, 
     setSaving(true); setError(""); setNotice("");
     try {
       if (!user || !supabase) throw new Error("Sign in before creating a post.");
-      const role = postType === "course" ? "instructor" : postingRole;
+      const role = postingRole;
       if (!roles.includes(role)) throw new Error(`Your account doesn't have the ${role} role. Ask an administrator to assign it before posting.`);
-      const postDescription = postType === "course" ? `Course: ${title.trim()}\n\n${description.trim()}` : description.trim();
+      const postDescription = description.trim();
       if (!postDescription) throw new Error("Add a description before saving.");
       let postId = editingPostId;
       if (postId) {
@@ -259,30 +260,34 @@ function DiscoverPosts({ user, sessionReady, startCoursePost, onComposerOpened, 
   return (
     <section className="posts-page discover-posts">
       <header className="posts-heading">
-        <div><p>SKILL SHARING</p><h1>Posts</h1><span>Signed in as {getUserName(user)}</span></div>
+        <div><p>SKILL SHARING</p><h1>Posts</h1><span>Newest posts from the SkillSync community</span></div>
         <button className="posts-create-button" onClick={beginCreate}><Plus size={18} /> Create post</button>
       </header>
       {notice && <p className="posts-notice" role="status">{notice}</p>}
       {error && <p className="posts-error" role="alert"><AlertCircle size={16} />{error}</p>}
       <div className="posts-tabs" role="tablist" aria-label="Post list">
-        <button role="tab" aria-selected={tab === "feed"} onClick={() => setTab("feed")}>Feed</button>
-        <button role="tab" aria-selected={tab === "mine"} onClick={() => setTab("mine")}>My posts</button>
+        <button role="tab" aria-selected={tab === "feed"} onClick={() => setTab("feed")}>Community feed <span>{tab === "feed" ? visiblePosts.length : posts.filter(post => post.status === "published").length}</span></button>
+        <button role="tab" aria-selected={tab === "mine"} onClick={() => setTab("mine")}>My posts <span>{tab === "mine" ? visiblePosts.length : posts.filter(post => post.user_id === user.id).length}</span></button>
       </div>
-      {loading ? <p className="posts-empty">Loading posts…</p> : visiblePosts.length === 0 ? (
-        <section className="posts-empty"><FileText size={27} /><h2>{tab === "mine" ? "No posts yet" : "No published posts yet"}</h2><p>{tab === "mine" ? "Create a post or course announcement and save it as a draft." : "Published posts from the community will appear here."}</p></section>
-      ) : (
+      {loading ? <section className="posts-skeleton-list" aria-label="Loading posts" aria-busy="true">{[0, 1, 2].map(item => <div className="posts-skeleton-card" key={item}><span /><div><i /><i /><i /></div></div>)}</section> : visiblePosts.length === 0 ? (
+        <section className="posts-empty"><span className="posts-empty-icon"><FileText size={25} /></span><h2>{tab === "mine" ? "Your post space is ready" : "The feed is ready for its first post"}</h2><p>{tab === "mine" ? "Drafts and posts you publish will be collected here." : "Published posts from the community will appear here, newest first."}</p>{tab === "mine" && <button onClick={beginCreate}><Plus size={16} /> Create your first post</button>}</section>      ) : (
         <section className="posts-list" aria-label={tab === "mine" ? "My posts" : "Published posts"}>
           {visiblePosts.map(post => {
             const author = profiles[post.user_id];
             const attached = attachmentFor(post.post_id);
-            const courseMatch = post.description.match(/^Course: (.*?)\n\n([\s\S]*)$/);
             const own = post.user_id === user.id;
+            const descriptionLines = (post.description || '').split(/\r?\n/);
+            const courseMatch = descriptionLines[0]?.trim().match(/^Course:\s*(.+)$/i);
+            const titleLineIndex = courseMatch ? descriptionLines.findIndex((line, index) => index > 0 && line.trim()) : -1;
+            const postTitle = titleLineIndex > 0 ? descriptionLines[titleLineIndex].trim() : '';
+            const postBody = postTitle ? descriptionLines.slice(titleLineIndex + 1).join('\n').trim() : post.description;
             return (
               <article className="skill-post-card" key={post.post_id}>
                 <header><div><strong>{author?.full_name || (own ? getUserName(user) : "SkillSync member")}</strong><span>{author?.institution || ""}</span></div><div className="posts-meta"><span>{post.posting_role}</span><span className={`post-status status-${post.status}`}>{post.status}</span><time>{new Date(post.created_at).toLocaleDateString()}</time></div></header>
-                {courseMatch && <h2><BookOpen size={18} />{courseMatch[1]}</h2>}
-                <p className="skill-post-description">{courseMatch ? courseMatch[2] : post.description}</p>
-                {attached.length > 0 && <ul className="post-attachments">{attached.map(file => <li key={file.attachment_id}><span>{file.original_name}<small>{(file.byte_size / (1024 * 1024)).toFixed(2)} MiB</small></span><button onClick={() => downloadAttachment(file)} aria-label={`Download ${file.original_name}`}><ArrowDownToLine size={17} /></button>{own && post.status === "draft" && <button onClick={() => removeAttachment(file)} aria-label={`Remove ${file.original_name}`}><X size={16} /></button>}</li>)}</ul>}
+                {courseMatch && <span className="post-course-chip">Course · {courseMatch[1].trim()}</span>}
+                {postTitle && <h2 className="skill-post-title">{postTitle}</h2>}
+                {postBody && <p className="skill-post-description">{postBody}</p>}
+                {attached.length > 0 && <ul className="post-attachments">{attached.map(file => <li key={file.attachment_id}><FileText size={19} className="post-attachment-icon" /><span title={file.original_name}><strong>{file.original_name}</strong><small>{(file.byte_size / (1024 * 1024)).toFixed(2)} MiB</small></span><button onClick={() => downloadAttachment(file)} aria-label={`Download ${file.original_name}`}><ArrowDownToLine size={17} /></button>{own && post.status === "draft" && <button onClick={() => removeAttachment(file)} aria-label={`Remove ${file.original_name}`}><X size={16} /></button>}</li>)}</ul>}
                 {own && <footer>{post.status === "draft" && <><button onClick={() => beginEdit(post)}>Edit draft</button><button onClick={() => deleteDraft(post)} disabled={attached.length > 0}><Trash2 size={15} /> Delete empty draft</button><button onClick={() => changeStatus(post, "published")}>Publish</button></>}{post.status === "published" && <button onClick={() => changeStatus(post, "archived")}><Archive size={15} /> Archive</button>}</footer>}
               </article>
             );
@@ -294,10 +299,7 @@ function DiscoverPosts({ user, sessionReady, startCoursePost, onComposerOpened, 
         <button className="posts-modal-close" onClick={() => !saving && setEditorOpen(false)} aria-label="Close"><X size={19} /></button>
         <p>SHARE WHAT YOU KNOW</p><h2 id="posts-editor-title">{editingPostId ? "Edit draft" : "Create a post"}</h2>
         <form onSubmit={savePost}>
-          {!editingPostId && <label>Post type<select value={postType} onChange={event => setPostType(event.target.value)}><option value="post">Skill post</option><option value="course">Course announcement (instructor role)</option></select></label>}
-          {!editingPostId && postType === "course" && <p className="posts-file-note">Course announcements publish as Instructor. To publish as a learner, choose Skill post.</p>}
-          {postType === "course" && <label>Course title<input value={title} onChange={event => setTitle(event.target.value)} maxLength={100} required /></label>}
-          {!editingPostId && postType !== "course" && <label>Post as<select value={postingRole} onChange={event => setPostingRole(event.target.value)} required>{assignedRoles.map(role => <option key={role} value={role}>{role === "instructor" ? "Instructor" : "Learner"}</option>)}</select></label>}
+          {!editingPostId && <label>Post as<select value={postingRole} onChange={event => setPostingRole(event.target.value)} required>{assignedRoles.map(role => <option key={role} value={role}>{role === "instructor" ? "Instructor" : "Learner"}</option>)}</select></label>}
           <label>Description<textarea value={description} onChange={event => setDescription(event.target.value)} rows={6} maxLength={10000} required placeholder="Describe the skill, learning goal, or course…" /></label>
           <label className="posts-file-picker"><Upload size={18} /> Attach files<input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,.jpg,.jpeg,.png,.webp,.pdf,.mp4" onChange={handleFiles} /><small>JPEG, PNG, WebP, PDF, or MP4. Each file must be 1–10,485,760 bytes (10 MiB).</small></label>
           {files.length > 0 && <ul className="posts-selected-files">{files.map((file, index) => <li key={`${file.name}-${file.lastModified}-${index}`}>{file.name} · {file.size.toLocaleString()} bytes<button type="button" onClick={() => setFiles(current => current.filter((_, i) => i !== index))} aria-label={`Remove ${file.name}`}><X size={14} /></button></li>)}</ul>}

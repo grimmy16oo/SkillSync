@@ -1,283 +1,52 @@
-import { useState } from "react";
-import {
-  ArrowRight,
-  BookOpen,
-  Check,
-  Layers3,
-  Plus,
-  Star,
-  TrendingUp,
-  UsersRound,
-  Hourglass,
-  X,
-} from "lucide-react";
-import { getUserInitials } from "../app/userProfile.js";
-function MyTeachingPage({
-  onBack,
-  onDiscover,
-  onLearning,
-  onOffer,
-  onRequests,
-  onUpdateRequest,
-  courses,
-  setCourses,
-  userName,
-  onProfile,
-  onCreateCoursePost,
-}) {
-  const [notice, setNotice] = useState("");
-  const [manageCourse, setManageCourse] = useState(null);
-  const pendingCount = courses.reduce(
-    (total, course) => total + course.pending,
-    0,
-  );
-  const handleRequest = (courseTitle, request, accepted) => {
-    onUpdateRequest({ ...request, course: courseTitle }, accepted);
-    setNotice(
-      accepted
-        ? `${request.name} was added to ${courseTitle}.`
-        : `${request.name}'s request was declined.`,
-    );
-  };
-  const saveCourseDetails = (event) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    setCourses((current) =>
-      current.map((course) =>
-        course.title === manageCourse.title
-          ? {
-              ...course,
-              title: String(form.get("title")).trim(),
-              category: String(form.get("category")),
-            }
-          : course,
-      ),
-    );
-    setManageCourse(null);
-    setNotice("Course details were updated for this session.");
-  };
+import { useEffect, useState } from 'react'
+import { GraduationCap, Layers3, Plus } from 'lucide-react'
+import { getUserInitials } from '../app/userProfile.js'
+import { supabase } from '../lib/supabase.js'
+import { teachingSeed } from '../data/demoData.jsx'
+
+function MyTeachingPage({ onBack, onDiscover, onLearning, onOffer, onRequests, userName, onProfile, onCreatePost, user }) {
+  const [posts, setPosts] = useState([])
+  const [loadedUserId, setLoadedUserId] = useState(null)
+  const [error, setError] = useState('')
+  const loading = Boolean(user) && loadedUserId !== user.id
+
+  useEffect(() => {
+    if (!user || !supabase) return undefined
+    let active = true
+    supabase.from('posts').select('*').eq('user_id', user.id).eq('posting_role', 'instructor')
+      .order('created_at', { ascending: false })
+      .then(({ data, error: queryError }) => {
+        if (!active) return
+        if (queryError) setError(`Your instructor posts could not be loaded: ${queryError.message}`)
+        else { setError(''); setPosts(data || []) }
+        setLoadedUserId(user.id)
+      })
+    return () => { active = false }
+  }, [user])
+
   return (
     <main className="teaching-page">
       <header className="discover-top">
-        <button className="discover-brand" onClick={onBack}>
-          <span className="brand-mark">
-            <Layers3 size={21} />
-          </span>
-          <span>SkillSync</span>
-        </button>
         <nav className="discover-nav" aria-label="Main navigation">
-          <button onClick={onBack}>Home</button>
-          <button onClick={onDiscover}>Discover</button>
-          <button onClick={onLearning}>My Learning</button>
-          <a className="current" href="#teaching-title" aria-current="page">
-            My Teaching
-          </a>
-          <button onClick={onRequests}>Requests</button>
+          <button onClick={onDiscover}>Discover</button><button onClick={onLearning}>My Learning</button>
+          <a className="current" href="#teaching-title" aria-current="page">My Teaching</a><button onClick={onRequests}>Requests</button>
         </nav>
-        <div className="discover-nav-actions">
-          <button className="offer-top" onClick={onOffer}>
-            <Plus size={17} /> Offer a Skill
-          </button>
-          <button className="nav-avatar" aria-label={`Open ${userName}'s profile`} onClick={onProfile}>
-            {getUserInitials(userName)}
-          </button>
-        </div>
+        <div className="discover-nav-actions"><button className="offer-top" onClick={onOffer}><Plus size={17} /> Offer a Skill</button><button className="nav-avatar" aria-label={`Open ${userName}'s profile`} onClick={onProfile}>{getUserInitials(userName)}</button></div>
       </header>
       <div className="teaching-content">
-        <div className="teaching-heading">
-          <div>
-            <p>INSTRUCTOR SPACE</p>
-            <h1 id="teaching-title">My Teaching</h1>
-          </div>
-          <button onClick={onCreateCoursePost}>
-            <Plus size={21} /> Create a Course Post
-          </button>
-        </div>
-        {notice && (
-          <p className="teaching-notice" role="status">
-            {notice}
-            <button
-              onClick={() => setNotice("")}
-              aria-label="Dismiss notification"
-            >
-              <X size={15} />
-            </button>
-          </p>
-        )}
-        <section className="teaching-stats">
-          <article>
-            <span>ACTIVE COURSES</span>
-            <strong>
-              {courses.filter((course) => !course.draftOnly).length}
-            </strong>
-            <small>
-              {
-                courses.filter((course) => course.draftOnly || course.draft)
-                  .length
-              }{" "}
-              draft in progress
-            </small>
-          </article>
-          <article>
-            <span>TOTAL LEARNERS</span>
-            <strong>{courses.reduce((n, c) => n + c.learners, 0)}</strong>
-            <small>
-              <TrendingUp size={16} /> +3 this week
-            </small>
-          </article>
-          <article>
-            <span>PENDING REQUESTS</span>
-            <strong>{pendingCount}</strong>
-            <small>Oldest: 2 days ago</small>
-          </article>
-          <article>
-            <span>AVERAGE RATING</span>
-            <strong>4.8</strong>
-            <small>
-              <Star size={16} fill="currentColor" /> from 31 reviews
-            </small>
-          </article>
-        </section>
-        <h2 className="your-courses-title">Your courses</h2>
-        <section className="teaching-course-grid">
-          {courses.map((course) => {
-            const Icon = course.icon;
-            return (
-              <article
-                className={`teaching-course tone-${course.tone}`}
-                key={course.title}
-              >
-                <div className="teaching-course-heading">
-                  <span className="teaching-course-icon">
-                    <Icon size={24} />
-                  </span>
-                  <div>
-                    <h3>{course.title}</h3>
-                    <p>
-                      {course.category} · {course.week}
-                    </p>
-                  </div>
-                  {course.draftOnly ? (
-                    <span className="active-pill draft-pill">● Draft</span>
-                  ) : (
-                    <span className="active-pill">● Active</span>
-                  )}
-                </div>
-                <div className="teaching-course-stats">
-                  <span>
-                    <UsersRound size={20} />
-                    {course.learners} learners
-                  </span>
-                  <span>
-                    <Hourglass size={19} />
-                    {course.pending} pending
-                  </span>
-                  <span>
-                    <Star size={20} fill="currentColor" />
-                    {course.rating}
-                  </span>
-                </div>
-                {course.requests.map((request) => (
-                  <div className="learner-request" key={request.name}>
-                    <span className="request-avatar">{request.initials}</span>
-                    <span className="request-person">
-                      <strong>{request.name}</strong>
-                      <small>{request.meta}</small>
-                    </span>
-                    <button
-                      className="accept-request"
-                      aria-label={`Accept ${request.name}'s request`}
-                      onClick={() => handleRequest(course.title, request, true)}
-                    >
-                      <Check size={20} />
-                    </button>
-                    <button
-                      className="decline-request"
-                      aria-label={`Decline ${request.name}'s request`}
-                      onClick={() =>
-                        handleRequest(course.title, request, false)
-                      }
-                    >
-                      <X size={19} />
-                    </button>
-                  </div>
-                ))}
-                {course.draft && (
-                  <div className="draft-row">
-                    <span>
-                      <BookOpen size={18} />
-                    </span>
-                    <strong>{course.draft}</strong>
-                    <small>Draft</small>
-                  </div>
-                )}
-                <div className="teaching-course-actions">
-                  <button
-                    className="manage-course"
-                    onClick={() => setManageCourse(course)}
-                  >
-                    Manage
-                    <ArrowRight size={18} />
-                  </button>
-                  <button className="all-requests" onClick={onRequests}>
-                    View all requests
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </section>
+        <div className="teaching-heading"><div><p>INSTRUCTOR SPACE</p><h1 id="teaching-title">My Teaching</h1></div><button onClick={onCreatePost}><Plus size={21} /> Create an Instructor Post</button></div>
+        <section className="teaching-stats schema-teaching-note"><article><span>YOUR POSTS</span><strong>{posts.length}</strong><small>Instructor posts saved in your account</small></article><article className="schema-teaching-explainer"><span>DEMO PREVIEW</span><strong>Course offerings</strong><small>Sample course cards only; live offerings need backend support.</small></article></section>
+        <h2 className="your-courses-title">Demo course previews</h2>
+        <section className="teaching-course-grid demo-teaching-grid">{teachingSeed.map(course => <article className={`teaching-course tone-${course.tone}`} key={course.title}><div className="teaching-course-heading"><span className="teaching-course-icon"><GraduationCap size={24} /></span><div><h3>{course.title}</h3><p>DEMO OFFERING · {course.category}</p></div><span className="active-pill draft-pill">Demo</span></div><p className="schema-demo-copy">This preview isn’t connected to a saved course offering.</p></article>)}</section>
+        <h2 className="your-courses-title">Your instructor posts</h2>
+        {loading ? <p className="schema-state">Loading your posts…</p>
+          : error ? <p className="schema-state schema-state-error" role="alert">{error}</p>
+            : !user ? <section className="schema-state"><GraduationCap size={25} /><h2>Sign in to see your posts</h2><p>Instructor posts are associated with your signed-in account.</p></section>
+              : posts.length === 0 ? <section className="schema-state"><GraduationCap size={25} /><h2>No instructor posts yet</h2><p>Your instructor posts from Discover will appear here.</p><button onClick={onCreatePost}><Plus size={16} /> Create a post</button></section>
+                : <section className="schema-post-grid">{posts.map(post => <article className="schema-post-card" key={post.post_id}><header><span className={`post-status status-${post.status}`}>{post.status}</span><time>{post.created_at ? new Date(post.created_at).toLocaleString() : ''}</time></header><p>{post.description}</p></article>)}</section>}
       </div>
-      {manageCourse && (
-        <div
-          className="create-course-backdrop"
-          onClick={() => setManageCourse(null)}
-        >
-          <section
-            className="create-course-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="manage-course-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              className="modal-close"
-              onClick={() => setManageCourse(null)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <p className="learner-eyebrow">COURSE SETTINGS</p>
-            <h2 id="manage-course-title">Manage course</h2>
-            <form onSubmit={saveCourseDetails}>
-              <label>
-                Course name
-                <input
-                  name="title"
-                  defaultValue={manageCourse.title}
-                  required
-                />
-              </label>
-              <label>
-                Category
-                <select name="category" defaultValue={manageCourse.category}>
-                  <option>Programming</option>
-                  <option>Web Development</option>
-                  <option>Data &amp; Databases</option>
-                  <option>AI / ML</option>
-                  <option>Design</option>
-                </select>
-              </label>
-              <button className="create-submit" type="submit">
-                Save changes
-                <Check size={17} />
-              </button>
-            </form>
-          </section>
-        </div>
-      )}
     </main>
-  );
+  )
 }
 
-export default MyTeachingPage;
+export default MyTeachingPage

@@ -1,221 +1,42 @@
-import { useState } from "react";
-import {
-  ArrowRight,
-  Award,
-  Code2,
-  Compass,
-  Flame,
-  GraduationCap,
-  Layers3,
-  Play,
-  Plus,
-  Hourglass,
-} from "lucide-react";
-import { learningCourses } from "../data/demoData.jsx";
-import { getUserInitials } from "../app/userProfile.js";
+import { useState } from 'react'
+import { ArrowRight, BookOpen, Compass, Layers3, Plus } from 'lucide-react'
+import { getUserInitials } from '../app/userProfile.js'
+import { learningCourses } from '../data/demoData.jsx'
 
-function MyLearningPage({
-  onDiscover,
-  onBack,
-  onOffer,
-  onTeaching,
-  onRequests,
-  onClassroom,
-  userName,
-  onProfile,
-}) {
-  const [activeTab, setActiveTab] = useState("In progress");
-  const [resumeOpen, setResumeOpen] = useState(false);
-  const shownCourses = learningCourses.filter(
-    (course) => course.status === activeTab,
-  );
-  const mainCourse = learningCourses[0];
+function MyLearningPage({ onDiscover, onBack, onOffer, onTeaching, onRequests, onClassroom, userName, onProfile }) {
+  const [activeTab, setActiveTab] = useState('In progress')
+  const activeCourse = learningCourses.find(course => course.status === 'In progress')
+  const visibleCourses = learningCourses.filter(course => course.status === activeTab)
   return (
     <main className="learning-page">
       <header className="discover-top">
-        <button className="discover-brand" onClick={onBack}>
-          <span className="brand-mark">
-            <Layers3 size={21} />
-          </span>
-          <span>SkillSync</span>
-        </button>
         <nav className="discover-nav" aria-label="Main navigation">
-          <button onClick={onBack}>Home</button>
           <button onClick={onDiscover}>Discover</button>
-          <a className="current" href="#learning-title" aria-current="page">
-            My Learning
-          </a>
-          <button onClick={onTeaching}>My Teaching</button>
-          <button onClick={onRequests}>Requests</button>
+          <a className="current" href="#learning-title" aria-current="page">My Learning</a>
+          <button onClick={onTeaching}>My Teaching</button><button onClick={onRequests}>Requests</button>
         </nav>
-        <div className="discover-nav-actions">
-          <button className="offer-top" onClick={onOffer}>
-            <Plus size={17} /> Offer a Skill
-          </button>
-          <button className="nav-avatar" aria-label={`Open ${userName}'s profile`} onClick={onProfile}>
-            {getUserInitials(userName)}
-          </button>
-        </div>
+        <div className="discover-nav-actions"><button className="offer-top" onClick={onOffer}><Plus size={17} /> Offer a Skill</button><button className="nav-avatar" aria-label={`Open ${userName}'s profile`} onClick={onProfile}>{getUserInitials(userName)}</button></div>
       </header>
-      <div className="learning-layout">
+      <div className="learning-layout schema-empty-layout">
         <section className="learning-main">
-          <div className="learning-title-row">
-            <div>
-              <p className="learner-eyebrow">LEARNER SPACE</p>
-              <h1 id="learning-title">My Learning</h1>
-            </div>
-            <button className="find-course-button" onClick={onDiscover}>
-              <Compass size={19} fill="currentColor" /> Find a new course
-            </button>
+          <div className="learning-title-row"><div><p className="learner-eyebrow">LEARNER SPACE · DEMO DATA</p><h1 id="learning-title">My Learning</h1></div><button className="find-course-button" onClick={onDiscover}><Compass size={19} fill="currentColor" /> Discover posts</button></div>
+          {activeCourse && <section className="continue-card"><div className="continue-icon"><BookOpen size={35} /></div><div className="continue-copy"><p>DEMO COURSE PREVIEW</p><h2>{activeCourse.title}</h2><span>{activeCourse.instructor} · {activeCourse.lessons}</span></div><button className="resume-button" onClick={onDiscover}><Compass size={17} /> Discover</button></section>}
+          <div className="learning-tabs" role="tablist" aria-label="Demo learning courses">
+            {['In progress', 'Completed', 'Saved'].map(tab => <button key={tab} role="tab" aria-selected={activeTab === tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}>{tab}</button>)}
           </div>
-          <section className="continue-card">
-            <div className="continue-icon">
-              <Code2 size={38} />
-            </div>
-            <div className="continue-copy">
-              <p>CONTINUE WHERE YOU LEFT OFF</p>
-              <h2>{mainCourse.title}</h2>
-              <span>
-                Next lesson: Lists and Dictionaries · with{" "}
-                {mainCourse.instructor}
-              </span>
-              <div className="continue-progress">
-                <div className="progress-track">
-                  <span style={{ width: `${mainCourse.percent}%` }} />
-                </div>
-                <strong>{mainCourse.percent}%</strong>
-              </div>
-            </div>
-            <button
-              className="resume-button"
-              onClick={() => setResumeOpen((value) => !value)}
-            >
-              <Play size={17} fill="currentColor" />{" "}
-              {resumeOpen ? "Lesson ready" : "Resume"}
-            </button>
-            {resumeOpen && (
-              <p className="resume-notice">Next up: Lists and Dictionaries</p>
-            )}
+          <section className="learning-course-grid">
+            {visibleCourses.map(course => { const Icon = course.icon; return <article className={`learning-course tone-${course.tone}`} key={course.title}>
+              <div className="learning-course-top"><span className="learning-icon"><Icon size={22} /></span><span className="course-week">DEMO</span></div>
+              <h2>{course.title}</h2><p>{course.instructor}</p><div className="lesson-progress"><span>{course.lessons}</span>{course.percent > 0 && <strong>{course.percent}%</strong>}</div>
+              {course.percent > 0 && <div className="progress-track"><span style={{ width: `${course.percent}%` }} /></div>}
+              {course.status === 'In progress' && <button className="open-classroom" onClick={onClassroom}>Open classroom<ArrowRight size={15} /></button>}
+            </article> })}
+            {!visibleCourses.length && <article className="learning-course"><div className="learning-course-top"><span className="learning-icon"><Layers3 size={22} /></span><span className="course-week">DEMO</span></div><h2>No {activeTab.toLowerCase()} demo courses</h2><p>This view contains sample content only. Real enrollments need backend support.</p></article>}
           </section>
-          <div
-            className="learning-tabs"
-            role="tablist"
-            aria-label="Filter learning courses"
-          >
-            {["In progress", "Completed", "Saved"].map((tab, i) => (
-              <button
-                key={tab}
-                role="tab"
-                aria-selected={activeTab === tab}
-                className={activeTab === tab ? "active" : ""}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-                <span> · {[3, 6, 4][i]}</span>
-              </button>
-            ))}
-          </div>
-          <div className="learning-course-grid">
-            {shownCourses.map((course) => {
-              const Icon = course.icon;
-              return (
-                <article
-                  className={`learning-course tone-${course.tone}`}
-                  key={course.title}
-                >
-                  <div className="learning-course-top">
-                    <span className="learning-icon">
-                      <Icon size={22} />
-                    </span>
-                    <span className="course-week">{course.week}</span>
-                  </div>
-                  <h2>{course.title}</h2>
-                  <p>{course.instructor}</p>
-                  <div className="lesson-progress">
-                    <span>{course.lessons}</span>
-                    {course.percent > 0 && <strong>{course.percent}%</strong>}
-                  </div>
-                  {course.percent > 0 && (
-                    <div className="progress-track">
-                      <span style={{ width: `${course.percent}%` }} />
-                    </div>
-                  )}
-                  {course.title === "Python Fundamentals" &&
-                    course.status === "In progress" && (
-                      <button className="open-classroom" onClick={onClassroom}>
-                        Open classroom
-                        <ArrowRight size={15} />
-                      </button>
-                    )}
-                </article>
-              );
-            })}
-          </div>
-          <div className="learning-achievements">
-            <div className="achievement-tile completed">
-              <GraduationCap size={34} />
-              <strong>6</strong>
-              <span>Courses completed</span>
-            </div>
-            <div className="achievement-tile streak">
-              <Flame size={32} fill="currentColor" />
-              <strong>12 days</strong>
-              <span>Learning streak</span>
-            </div>
-            <div className="achievement-tile certificates">
-              <Award size={33} fill="currentColor" />
-              <strong>2</strong>
-              <span>Certificates earned</span>
-            </div>
-          </div>
         </section>
-        <aside className="coming-up">
-          <h2>Coming up</h2>
-          <div className="upcoming-list">
-            <article>
-              <span className="date-tile">
-                <small>OCT</small>
-                <strong>21</strong>
-              </span>
-              <span>
-                <strong>Lab 7 · Loops in practice</strong>
-                <small>Meeting · 5:00 PM</small>
-              </span>
-            </article>
-            <article>
-              <span className="date-tile">
-                <small>OCT</small>
-                <strong>22</strong>
-              </span>
-              <span>
-                <strong>React Hooks Deep Dive</strong>
-                <small>Meeting · 6:30 PM</small>
-              </span>
-            </article>
-            <article className="due-item">
-              <span className="date-tile">
-                <small>OCT</small>
-                <strong>23</strong>
-              </span>
-              <span>
-                <strong>Problem Set 5 due</strong>
-                <small>Python · 11:59 PM</small>
-              </span>
-            </article>
-            <article className="pending-item">
-              <span className="date-tile">
-                <Hourglass size={20} />
-              </span>
-              <span>
-                <strong>Machine Learning Basics</strong>
-                <small>Join request pending</small>
-              </span>
-            </article>
-          </div>
-        </aside>
       </div>
     </main>
-  );
+  )
 }
 
-export default MyLearningPage;
+export default MyLearningPage

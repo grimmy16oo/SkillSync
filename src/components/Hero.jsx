@@ -25,8 +25,8 @@ function Hero({ onAuth }) {
             Expand your skillset through give and take
           </h1>
           <p>
-            SkillSync is an expertise sharing platform that lets you take and
-            offer courses for free.
+            Discover skill posts, share what you know, and manage the skills
+            you want to learn or offer.
           </p>
           <div className="hero-actions">
             <button

@@ -4,14 +4,11 @@ import {
   ArrowRight,
   Building2,
   Code2,
-  Database,
   Eye,
   EyeOff,
   LockKeyhole,
   Mail,
-  Pencil,
   RefreshCw,
-  Sparkles,
   UsersRound,
   UserRound,
 } from "lucide-react";
@@ -50,8 +47,8 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
                     <Building2 size={23} />
                   </span>
                   <div>
-                    <strong>Verify with your university email</strong>
-                    <small>Only students from your campus can join.</small>
+                    <strong>Add your institution</strong>
+                    <small>Show your institution on your profile.</small>
                   </div>
                 </article>
                 <article>
@@ -60,8 +57,8 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
                     <ArrowRight size={20} />
                   </span>
                   <div>
-                    <strong>Pick what you teach and learn</strong>
-                    <small>We match you with peers who fit both ways.</small>
+                    <strong>Choose your roles and skills</strong>
+                    <small>Set learner and instructor roles and skills.</small>
                   </div>
                 </article>
                 <article>
@@ -69,8 +66,8 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
                     <UsersRound size={22} />
                   </span>
                   <div>
-                    <strong>Join a classroom</strong>
-                    <small>Meetings, materials and members in one place.</small>
+                    <strong>Share a skill post</strong>
+                    <small>Publish a post and attach supporting files.</small>
                   </div>
                 </article>
               </div>
@@ -89,34 +86,19 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
               </p>
               <div className="auth-social-proof">
                 <article className="learner-proof">
-                  <span className="proof-avatar">RS</span>
+                  <span className="proof-avatar"><UserRound size={19} /></span>
                   <div>
-                    <strong>Riya Sen wants to learn</strong>
-                    <small>Java Programming · 2 min ago</small>
-                    <span className="offer-tag">↔ &nbsp;Offers UI/UX</span>
+                    <strong>Member profile</strong>
+                    <small>Name, email, institution and bio</small>
+                    <span className="offer-tag">PROFILE</span>
                   </div>
                 </article>
                 <article className="active-proof">
-                  <strong>ACTIVE THIS WEEK</strong>
-                  <b>1,240</b>
-                  <small>students swapping skills</small>
+                  <strong>CONNECTED DATA</strong>
+                  <b>Posts</b>
+                  <small>Skills, roles, posts and attachments</small>
                 </article>
-              </div>
-              <div className="auth-topic-tags">
-                <span>
-                  <Code2 size={15} /> Python
-                </span>
-                <span>
-                  <Sparkles size={15} /> React
-                </span>
-                <span>
-                  <Database size={15} /> ML Basics
-                </span>
-                <span>
-                  <Pencil size={15} /> UI/UX
-                </span>
-              </div>
-            </>
+              </div>            </>
           )}
         </section>
         <section className="auth-card" aria-labelledby="auth-title">

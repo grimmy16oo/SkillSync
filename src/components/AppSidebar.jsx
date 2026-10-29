@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-  Bell,
   BookOpen,
   ChevronLeft,
   ChevronRight,
   Compass,
   LogOut,
   GraduationCap,
-  Home,
   Inbox,
   Layers3,
   Menu,
-  Settings,
   UsersRound,
   UserRound,
   X,
@@ -32,13 +29,11 @@ function AppSidebar({ page, onNavigate, onLogout, user, collapsed, onToggleColla
     onNavigate(destination);
   };
   const links = [
-    ["home", "Home", Home],
     ["discover", "Discover", Compass],
     ["learning", "My Learning", BookOpen],
     ["teaching", "My Teaching", GraduationCap],
     ["requests", "Requests", Inbox],
     ["classroom", "Classrooms", UsersRound],
-    ["notifications", "Notifications", Bell],
     ["profile", "Profile", UserRound],
   ];
   return (
@@ -84,16 +79,18 @@ function AppSidebar({ page, onNavigate, onLogout, user, collapsed, onToggleColla
             {count && <b>{count}</b>}
           </button>
         ))}
-        <button
-          data-tooltip="Settings"
-          aria-label={collapsed ? "Settings" : undefined}
-          className={`app-sidebar-link settings-link ${page === "settings" ? "active" : ""}`}
-          aria-current={page === "settings" ? "page" : undefined}
-          onClick={() => navigate("settings")}
-        >
-          <Settings size={20} />
-          <span>Settings</span>
-        </button>
+        {user && (
+          <button
+            className="app-sidebar-link sidebar-logout"
+            type="button"
+            data-tooltip="Log out"
+            aria-label={collapsed ? "Log out" : undefined}
+            onClick={onLogout}
+          >
+            <LogOut size={20} />
+            <span>Log out</span>
+          </button>
+        )}
       </nav>
       <button
         className="sidebar-collapse-toggle"
@@ -106,18 +103,6 @@ function AppSidebar({ page, onNavigate, onLogout, user, collapsed, onToggleColla
         {collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
         <span>{collapsed ? "Expand sidebar" : "Collapse sidebar"}</span>
       </button>
-      {user && (
-        <button
-          className="app-sidebar-link"
-          type="button"
-          data-tooltip="Log out"
-          aria-label={collapsed ? "Log out" : undefined}
-          onClick={onLogout}
-        >
-          <LogOut size={20} />
-          <span>Log out</span>
-        </button>
-      )}
     </aside>
   );
 }

@@ -4,26 +4,24 @@ import {
   Building2,
   Check,
   Code2,
-  GraduationCap,
   Pencil,
   RefreshCw,
   Sparkles,
-  Star,
   UserRound,
   X,
 } from "lucide-react";
 
-function ProfilePage({ user, skillCatalog, profileSkills, skillRoles, skillLoadError, onChangeSkill, onCreateSkill, onAddRole, onRemoveRole, onSaveProfile, onBack, onOffer }) {
+function ProfilePage({ user, profileData, profileLoadError, skillCatalog, profileSkills, skillRoles, skillLoadError, onChangeSkill, onCreateSkill, onAddRole, onRemoveRole, onSaveProfile, onBack, onOffer }) {
   const [editOpen, setEditOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
   const metadata = user?.user_metadata ?? {};
-  const [profile, setProfile] = useState(() => ({
-    name: metadata.full_name || metadata.name || user?.email?.split("@")[0] || "Student",
-    university: metadata.institution || metadata.university || "",
-    program: metadata.program || metadata.year || "Computer Science & Engineering",
-    bio: metadata.bio || "",
-  }));
+  const [profileOverride, setProfileOverride] = useState(null);
+  const profile = profileOverride || {
+    name: profileData?.full_name || metadata.full_name || metadata.name || user?.email?.split("@")[0] || "Student",
+    institution: profileData?.institution || metadata.institution || "",
+    bio: profileData?.bio || metadata.bio || "",
+  };
   const [saving, setSaving] = useState(false);
   const submitProfile = async (event) => {
     event.preventDefault();
@@ -31,15 +29,14 @@ function ProfilePage({ user, skillCatalog, profileSkills, skillRoles, skillLoadE
     const updatedProfile = {
       ...profile,
       name: String(form.get("name")),
-      university: String(form.get("university")),
-      program: String(form.get("program")),
+      institution: String(form.get("institution")),
       bio: String(form.get("bio")),
     };
     setSaving(true);
     setSaveError("");
     try {
       await onSaveProfile(updatedProfile);
-      setProfile(updatedProfile);
+      setProfileOverride(updatedProfile);
       setEditOpen(false);
       setSaved(true);
     } catch (error) {
@@ -64,6 +61,7 @@ function ProfilePage({ user, skillCatalog, profileSkills, skillRoles, skillLoadE
         </div>
       )}
       {saveError && <div className="profile-saved" role="alert">{saveError}</div>}
+      {profileLoadError && <div className="profile-saved" role="alert">Profile data could not be loaded: {profileLoadError}</div>}
       <section className="profile-hero">
         <div className="profile-cover" />
         <div className="profile-identity">
@@ -74,13 +72,10 @@ function ProfilePage({ user, skillCatalog, profileSkills, skillRoles, skillLoadE
             <div className="profile-name-line">
               <h1>{profile.name}</h1>
               <span>
-                <RefreshCw size={13} /> Learner &amp; Instructor
+                <RefreshCw size={13} />{skillRoles.map(role => role === "instructor" ? "Instructor" : "Learner").join(" & ") || "Member"}
               </span>
             </div>
-            <p className="profile-school">
-              <Building2 size={17} /> {profile.university} <i>·</i>{" "}
-              <GraduationCap size={18} /> {profile.program}
-            </p>
+            <p className="profile-school"><Building2 size={17} /> {profile.institution || "Institution not added"}</p><p className="profile-school">{user?.email}</p>
             <p className="profile-bio">{profile.bio || "Add a short introduction about yourself."}</p>
           </div>
           <div className="profile-actions">
@@ -120,34 +115,7 @@ function ProfilePage({ user, skillCatalog, profileSkills, skillRoles, skillLoadE
           </div>
         </article>
       </section>
-      <section className="profile-stats">
-        <article className="profile-stat courses">
-          <span>COURSES</span>
-          <strong>5</strong>
-          <small>3 learning · 2 teaching</small>
-        </article>
-        <article className="profile-stat completed">
-          <span>COMPLETED COURSES</span>
-          <strong>6</strong>
-          <small>2 certificates earned</small>
-        </article>
-        <article className="profile-stat ratings">
-          <span>RATINGS</span>
-          <strong>4.8</strong>
-          <small>
-            <Star size={16} fill="currentColor" />
-            ★★★★ 31 reviews
-          </small>
-        </article>
-        <article className="profile-review">
-          <span>LATEST REVIEW</span>
-          <blockquote>
-            “May explains Figma like a friend, not a lecturer. Made my project
-            look 10× better.”
-          </blockquote>
-          <small>Arif H. · UI/UX for Developers</small>
-        </article>
-      </section>
+
       {editOpen && (
         <div
           className="profile-modal-backdrop"
@@ -173,18 +141,7 @@ function ProfilePage({ user, skillCatalog, profileSkills, skillRoles, skillLoadE
                 Name
                 <input name="name" defaultValue={profile.name} required />
               </label>
-              <label>
-                University
-                <input
-                  name="university"
-                  defaultValue={profile.university}
-                  required
-                />
-              </label>
-              <label>
-                Program and year
-                <input name="program" defaultValue={profile.program} required />
-              </label>
+              <label>Institution<input name="institution" defaultValue={profile.institution} /></label>
               {skillLoadError && <p className="posts-error" role="alert">{skillLoadError}</p>}
               <RoleSelection roles={skillRoles} onAddRole={onAddRole} onRemoveRole={onRemoveRole} />
               <SkillSelection title="Instructor · Skills I can offer" role="instructor" catalog={skillCatalog} selected={offeringSkills} enabled={skillRoles.includes("instructor")} onChange={onChangeSkill} onCreateSkill={onCreateSkill} />
@@ -195,7 +152,6 @@ function ProfilePage({ user, skillCatalog, profileSkills, skillRoles, skillLoadE
                   name="bio"
                   defaultValue={profile.bio}
                   rows="4"
-                  required
                 />
               </label>
               <button className="profile-save-button" type="submit" disabled={saving}>

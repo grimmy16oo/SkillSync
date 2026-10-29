@@ -1,14 +1,8 @@
 import {
-  CalendarPlus,
-  CheckCircle2,
   Code2,
   Database,
   FileText,
-  FileUp,
   Sparkles,
-  Star,
-  Trophy,
-  UserRound,
 } from "lucide-react";
 
 export const courses = [
@@ -105,28 +99,10 @@ export const courses = [
     tone: "lavender",
   },
 ];
-export const categories = [
-  "All",
-  "Programming",
-  "Web Development",
-  "Data & Databases",
-  "AI / ML",
-  "Design",
-];
-export const skills = [
-  "Python",
-  "React",
-  "SQL",
-  "Java",
-  "Figma",
-  "scikit-learn",
-];
-
 export const learningCourses = [
   {
     title: "Python Fundamentals",
     instructor: "Nabil Rahman",
-    week: "WEEK 6 OF 8",
     lessons: "18 of 25 lessons",
     percent: 72,
     icon: Code2,
@@ -136,7 +112,6 @@ export const learningCourses = [
   {
     title: "React & Web Development",
     instructor: "Tanvir Ahmed",
-    week: "WEEK 3 OF 6",
     lessons: "8 of 20 lessons",
     percent: 40,
     icon: Sparkles,
@@ -146,7 +121,6 @@ export const learningCourses = [
   {
     title: "Database Design",
     instructor: "Sadia Karim",
-    week: "WEEK 1 OF 6",
     lessons: "3 of 18 lessons",
     percent: 15,
     icon: Database,
@@ -156,7 +130,6 @@ export const learningCourses = [
   {
     title: "UI/UX for Developers",
     instructor: "May Chowdhury",
-    week: "COMPLETED",
     lessons: "16 of 16 lessons",
     percent: 100,
     icon: Sparkles,
@@ -166,7 +139,6 @@ export const learningCourses = [
   {
     title: "Java Programming",
     instructor: "Lamia Mahmud",
-    week: "COMPLETED",
     lessons: "20 of 20 lessons",
     percent: 100,
     icon: Code2,
@@ -176,7 +148,6 @@ export const learningCourses = [
   {
     title: "Git & GitHub Essentials",
     instructor: "Aminul Islam",
-    week: "COMPLETED",
     lessons: "12 of 12 lessons",
     percent: 100,
     icon: Code2,
@@ -186,7 +157,6 @@ export const learningCourses = [
   {
     title: "Data Structures",
     instructor: "Nusrat Jahan",
-    week: "COMPLETED",
     lessons: "18 of 18 lessons",
     percent: 100,
     icon: Database,
@@ -196,7 +166,6 @@ export const learningCourses = [
   {
     title: "Computer Networks",
     instructor: "Rafi Hasan",
-    week: "COMPLETED",
     lessons: "14 of 14 lessons",
     percent: 100,
     icon: Database,
@@ -206,7 +175,6 @@ export const learningCourses = [
   {
     title: "Figma for Beginners",
     instructor: "Lamia Mahmud",
-    week: "COMPLETED",
     lessons: "10 of 10 lessons",
     percent: 100,
     icon: Sparkles,
@@ -216,7 +184,6 @@ export const learningCourses = [
   {
     title: "Machine Learning Basics",
     instructor: "Fahim Islam",
-    week: "SAVED FOR LATER",
     lessons: "Starts next month",
     percent: 0,
     icon: Sparkles,
@@ -226,7 +193,6 @@ export const learningCourses = [
   {
     title: "Cloud Computing Intro",
     instructor: "Nabil Rahman",
-    week: "SAVED FOR LATER",
     lessons: "Starts in 2 weeks",
     percent: 0,
     icon: Database,
@@ -236,7 +202,6 @@ export const learningCourses = [
   {
     title: "Algorithms in Python",
     instructor: "Tanvir Ahmed",
-    week: "SAVED FOR LATER",
     lessons: "Starts next month",
     percent: 0,
     icon: Code2,
@@ -246,7 +211,6 @@ export const learningCourses = [
   {
     title: "Mobile App Design",
     instructor: "May Chowdhury",
-    week: "SAVED FOR LATER",
     lessons: "Starts soon",
     percent: 0,
     icon: Sparkles,
@@ -259,7 +223,6 @@ export const teachingSeed = [
   {
     title: "UI/UX for Developers",
     category: "Design",
-    week: "Week 3 of 6",
     tone: "coral",
     icon: Sparkles,
     learners: 5,
@@ -289,7 +252,6 @@ export const teachingSeed = [
   {
     title: "Java Programming",
     category: "Programming",
-    week: "Week 1 of 8",
     tone: "mint",
     icon: Code2,
     learners: 3,
@@ -453,113 +415,5 @@ export const classroomMembers = [
     role: "Student · CSE, 2nd year",
     initials: "ZI",
     tone: "mint",
-  },
-];
-
-export const notificationSeed = [
-  {
-    id: 1,
-    requestId: 1,
-    group: "Today",
-    type: "Requests",
-    icon: UserRound,
-    initials: "RS",
-    message: (
-      <>
-        <strong>Riya</strong> requested to join{" "}
-        <strong>Java Programming.</strong>
-      </>
-    ),
-    time: "2 min ago",
-    unread: true,
-    action: "Accept",
-    tone: "lavender",
-  },
-  {
-    id: 2,
-    group: "Today",
-    type: "Requests",
-    icon: CheckCircle2,
-    message: (
-      <>
-        Your request for <strong>Web Development</strong> was accepted.
-      </>
-    ),
-    time: "3 hours ago",
-    unread: true,
-    tone: "mint",
-  },
-  {
-    id: 3,
-    group: "Today",
-    type: "Meetings",
-    icon: CalendarPlus,
-    message: (
-      <>
-        A new meeting has been scheduled:{" "}
-        <strong>Lab 7 · Loops in practice.</strong>
-      </>
-    ),
-    time: "5 hours ago",
-    unread: true,
-    tone: "lavender",
-  },
-  {
-    id: 4,
-    group: "Yesterday",
-    type: "Courses",
-    icon: FileUp,
-    message: (
-      <>
-        <strong>Nabil</strong> uploaded{" "}
-        <strong>Week 6 · Functions and Scope</strong> to Python Fundamentals.
-      </>
-    ),
-    time: "Yesterday",
-    unread: false,
-    tone: "gold",
-  },
-  {
-    id: 5,
-    group: "Yesterday",
-    type: "Courses",
-    icon: Star,
-    message: (
-      <>
-        <strong>Arif</strong> rated <strong>UI/UX for Developers</strong> 5
-        stars.
-      </>
-    ),
-    time: "Yesterday",
-    unread: false,
-    tone: "lavender",
-  },
-  {
-    id: 6,
-    group: "This week",
-    type: "Courses",
-    icon: Trophy,
-    message: (
-      <>
-        You hit <strong>70% progress</strong> in Python Fundamentals.
-      </>
-    ),
-    time: "Oct 17",
-    unread: false,
-    tone: "mint",
-  },
-  {
-    id: 7,
-    group: "This week",
-    type: "Meetings",
-    icon: CalendarPlus,
-    message: (
-      <>
-        Your <strong>Python lab recording</strong> is ready to watch.
-      </>
-    ),
-    time: "Oct 16",
-    unread: false,
-    tone: "blue",
   },
 ];
