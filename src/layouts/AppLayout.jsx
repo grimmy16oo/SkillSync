@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AppSidebar from "../components/AppSidebar.jsx";
 
-function AppLayout({ page, onNavigate, children }) {
+function AppLayout({ page, onNavigate, onLogout, user, children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => window.localStorage.getItem("skillsync-sidebar-collapsed") === "true",
   );
@@ -28,6 +28,8 @@ function AppLayout({ page, onNavigate, children }) {
         collapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
         onNavigate={onNavigate}
+        onLogout={onLogout}
+        user={user}
       />
       <div className="app-main min-w-0">{children}</div>
     </div>

@@ -8,6 +8,7 @@ import {
   Hourglass,
   X,
 } from "lucide-react";
+import { getUserInitials } from "../app/userProfile.js";
 function RequestsPage({
   onHome,
   onDiscover,
@@ -19,6 +20,7 @@ function RequestsPage({
   sentRequests,
   requestBuckets,
   onUpdateRequest,
+  userName,
 }) {
   const { received, accepted, declined } = requestBuckets;
   const [activeTab, setActiveTab] = useState("Received");
@@ -64,7 +66,7 @@ function RequestsPage({
             aria-label="Open profile"
             onClick={onProfile}
           >
-            M
+            {getUserInitials(userName)}
           </button>
         </div>
       </header>

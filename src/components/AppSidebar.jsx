@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Compass,
+  LogOut,
   GraduationCap,
   Home,
   Inbox,
@@ -16,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 
-function AppSidebar({ page, onNavigate, collapsed, onToggleCollapse }) {
+function AppSidebar({ page, onNavigate, onLogout, user, collapsed, onToggleCollapse }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
     if (!mobileOpen) return undefined;
@@ -105,6 +106,18 @@ function AppSidebar({ page, onNavigate, collapsed, onToggleCollapse }) {
         {collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
         <span>{collapsed ? "Expand sidebar" : "Collapse sidebar"}</span>
       </button>
+      {user && (
+        <button
+          className="app-sidebar-link"
+          type="button"
+          data-tooltip="Log out"
+          aria-label={collapsed ? "Log out" : undefined}
+          onClick={onLogout}
+        >
+          <LogOut size={20} />
+          <span>Log out</span>
+        </button>
+      )}
     </aside>
   );
 }

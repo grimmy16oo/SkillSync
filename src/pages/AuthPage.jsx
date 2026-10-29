@@ -7,43 +7,25 @@ import {
   Database,
   Eye,
   EyeOff,
-  GraduationCap,
   LockKeyhole,
   Mail,
   Pencil,
-  Plus,
   RefreshCw,
   Sparkles,
   UsersRound,
   UserRound,
 } from "lucide-react";
 
-function AuthPage({ mode, onModeChange, onBack, onLogin }) {
+function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
   const isSignup = mode === "signup";
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
-  const [teach, setTeach] = useState(["Python", "UI/UX"]);
-  const [learn, setLearn] = useState(["React", "Machine Learning"]);
-  const [moreTeach, setMoreTeach] = useState(false);
-  const [moreLearn, setMoreLearn] = useState(false);
   const [message, setMessage] = useState("");
-  const toggleSkill = (list, setter, skill) =>
-    setter(
-      list.includes(skill)
-        ? list.filter((item) => item !== skill)
-        : [...list, skill],
-    );
-  const skillChip = (skill, list, setter) => (
-    <button
-      key={skill}
-      type="button"
-      className={`auth-skill ${list.includes(skill) ? "selected" : ""}`}
-      aria-pressed={list.includes(skill)}
-      onClick={() => toggleSkill(list, setter, skill)}
-    >
-      {skill}
-    </button>
-  );
+  const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [institution, setInstitution] = useState("");
+  const [roleChoice, setRoleChoice] = useState("learner");
   return (
     <main className={`auth-page ${isSignup ? "signup-mode" : "login-mode"}`}>
       <button
@@ -161,25 +143,37 @@ function AuthPage({ mode, onModeChange, onBack, onLogin }) {
           </div>
           <form
             className="auth-form"
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
-              if (isSignup) {
-                setMessage(
-                  "Account creation is not connected yet. Your details were not submitted.",
-                );
-                return;
-              }
               setMessage("");
-              onLogin();
+              setBusy(true);
+              try {
+                const result = await onAuthenticate({
+                  mode: isSignup ? "signup" : "login",
+                  email,
+                  password,
+                  fullName,
+                  institution,
+                  roleChoice,
+                });
+                if (result?.message) setMessage(result.message);
+              } catch (error) {
+                setMessage(error.message || "Authentication failed. Please try again.");
+              } finally {
+                setBusy(false);
+              }
             }}
           >
             {isSignup && (
+              <>
               <div className="auth-field-row">
                 <label className="field-label">
                   Full name
                   <span className="input-wrap">
                     <UserRound size={18} />
                     <input
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
                       autoComplete="name"
                       type="text"
                       placeholder="Susmita Das"
@@ -188,24 +182,33 @@ function AuthPage({ mode, onModeChange, onBack, onLogin }) {
                   </span>
                 </label>
                 <label className="field-label">
-                  Year
+                  Institution
                   <span className="input-wrap">
-                    <GraduationCap size={18} />
-                    <select defaultValue="CSE, 3rd year" aria-label="Year">
-                      <option>CSE, 1st year</option>
-                      <option>CSE, 2nd year</option>
-                      <option>CSE, 3rd year</option>
-                      <option>CSE, 4th year</option>
+                    <Building2 size={18} />
+                    <input value={institution} onChange={(event) => setInstitution(event.target.value)} autoComplete="organization" placeholder="Your university" required />
+                  </span>
+                </label>
+                <label className="field-label">
+                  I want to join as
+                  <span className="input-wrap">
+                    <UsersRound size={18} />
+                    <select value={roleChoice} onChange={(event) => setRoleChoice(event.target.value)} aria-label="Choose your roles">
+                      <option value="learner">Learner</option>
+                      <option value="instructor">Instructor</option>
+                      <option value="both">Learner and instructor</option>
                     </select>
                   </span>
                 </label>
               </div>
+              </>
             )}
             <label className="field-label">
               University email
               <span className="input-wrap">
                 <Mail size={18} />
                 <input
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   autoComplete="email"
                   type="email"
                   placeholder="you@university.edu"
@@ -251,54 +254,6 @@ function AuthPage({ mode, onModeChange, onBack, onLogin }) {
             </label>
             {isSignup ? (
               <>
-                <div className="password-meter" aria-label="Password strength">
-                  <span className={password.length >= 1 ? "filled" : ""}></span>
-                  <span className={password.length >= 6 ? "filled" : ""}></span>
-                  <span
-                    className={password.length >= 10 ? "filled" : ""}
-                  ></span>
-                  <span
-                    className={password.length >= 14 ? "filled" : ""}
-                  ></span>
-                </div>
-                <fieldset className="skill-field">
-                  <legend>I can teach</legend>
-                  <div className="skill-list">
-                    {["Python", "Java", "UI/UX", "Databases"].map((skill) =>
-                      skillChip(skill, teach, setTeach),
-                    )}
-                    <button
-                      type="button"
-                      className="auth-skill add-skill"
-                      onClick={() => setMoreTeach((value) => !value)}
-                    >
-                      <Plus size={16} /> Add skill
-                    </button>
-                    {moreTeach &&
-                      ["React", "Git", "Machine Learning"].map((skill) =>
-                        skillChip(skill, teach, setTeach),
-                      )}
-                  </div>
-                </fieldset>
-                <fieldset className="skill-field">
-                  <legend>I want to learn</legend>
-                  <div className="skill-list">
-                    {["React", "Machine Learning", "Git"].map((skill) =>
-                      skillChip(skill, learn, setLearn),
-                    )}
-                    <button
-                      type="button"
-                      className="auth-skill add-skill"
-                      onClick={() => setMoreLearn((value) => !value)}
-                    >
-                      <Plus size={16} /> Add skill
-                    </button>
-                    {moreLearn &&
-                      ["Python", "Java", "UI/UX"].map((skill) =>
-                        skillChip(skill, learn, setLearn),
-                      )}
-                  </div>
-                </fieldset>
                 <label className="remember-option terms-option">
                   <input type="checkbox" required /> I agree to the community
                   guidelines and privacy policy
@@ -314,8 +269,8 @@ function AuthPage({ mode, onModeChange, onBack, onLogin }) {
                 {message}
               </p>
             )}
-            <button type="submit" className="auth-submit">
-              {isSignup ? "Create account" : "Log in"}
+            <button type="submit" className="auth-submit" disabled={busy}>
+              {busy ? "Please wait…" : isSignup ? "Create account" : "Log in"}
               <ArrowRight size={20} />
             </button>
           </form>

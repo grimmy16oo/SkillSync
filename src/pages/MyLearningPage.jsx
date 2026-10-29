@@ -12,6 +12,7 @@ import {
   Hourglass,
 } from "lucide-react";
 import { learningCourses } from "../data/demoData.jsx";
+import { getUserInitials } from "../app/userProfile.js";
 
 function MyLearningPage({
   onDiscover,
@@ -20,6 +21,8 @@ function MyLearningPage({
   onTeaching,
   onRequests,
   onClassroom,
+  userName,
+  onProfile,
 }) {
   const [activeTab, setActiveTab] = useState("In progress");
   const [resumeOpen, setResumeOpen] = useState(false);
@@ -49,9 +52,9 @@ function MyLearningPage({
           <button className="offer-top" onClick={onOffer}>
             <Plus size={17} /> Offer a Skill
           </button>
-          <span className="nav-avatar" aria-label="Signed in as May">
-            M
-          </span>
+          <button className="nav-avatar" aria-label={`Open ${userName}'s profile`} onClick={onProfile}>
+            {getUserInitials(userName)}
+          </button>
         </div>
       </header>
       <div className="learning-layout">

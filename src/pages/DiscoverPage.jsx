@@ -17,9 +17,17 @@ import {
   TrendingUp,
   UsersRound,
 } from "lucide-react";
-import { courses, categories, skills } from "../data/demoData.jsx";
+import { courses, categories } from "../data/demoData.jsx";
+import { getUserInitials } from "../app/userProfile.js";
+import DiscoverPosts from "../components/DiscoverPosts.jsx";
 
 function DiscoverPage({
+  user,
+  sessionReady,
+  startCoursePost,
+  onComposerOpened,
+  onLogin,
+  onSignup,
   onBack,
   onOffer,
   onLearning,
@@ -27,11 +35,25 @@ function DiscoverPage({
   onRequests,
   onRequest,
   requestedCourseTitles,
+  userName,
+  onProfile,
+  skillCatalog = [],
+  profileSkills = [],
+  skillRoles = [],
+  skillLoadError = "",
+  onCreateSkill,
+  onAddSkill,
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [skill, setSkill] = useState("");
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [addSkillOpen, setAddSkillOpen] = useState(false);
+  const [newSkillId, setNewSkillId] = useState("");
+  const [newSkillName, setNewSkillName] = useState("");
+  const [skillRole, setSkillRole] = useState("learner");
+  const [skillMessage, setSkillMessage] = useState("");
+  const [addingSkill, setAddingSkill] = useState(false);
   const searchRef = useRef(null);
   useEffect(() => {
     const focusSearch = (event) => {
@@ -57,6 +79,46 @@ function DiscoverPage({
       searchText.includes(query.toLowerCase())
     );
   });
+  const availableSkills = skillCatalog.map(item => item.skill_name);
+  const activeSkillRole = skillRoles.includes(skillRole) ? skillRole : skillRoles[0] || "learner";
+  const selectedSkillIds = new Set(profileSkills.filter(item => item.skill_type === (activeSkillRole === "instructor" ? "offering" : "learning")).map(item => item.skill_id));
+  const submitNewSkill = async (event) => {
+    event.preventDefault();
+    if (!newSkillId) return;
+    setAddingSkill(true);
+    setSkillMessage("");
+    try {
+      const selected = skillCatalog.find(item => item.skill_id === newSkillId);
+      await onAddSkill(newSkillId, activeSkillRole);
+      setSkill(selected?.skill_name || "");
+      setNewSkillId("");
+      setAddSkillOpen(false);
+    } catch (error) {
+      setSkillMessage(error.message || "Unable to add this skill.");
+    } finally {
+      setAddingSkill(false);
+    }
+  };
+  const submitCustomSkill = async () => {
+    if (newSkillName.trim().length < 2 || !skillRoles.includes(activeSkillRole)) return;
+    setAddingSkill(true);
+    setSkillMessage("");
+    try {
+      const created = await onCreateSkill(newSkillName);
+      setSkill(created.skill_name);
+      setNewSkillName("");
+      setAddSkillOpen(false);
+      try {
+        await onAddSkill(created.skill_id, activeSkillRole);
+      } catch (error) {
+        setSkillMessage(`“${created.skill_name}” was saved to the catalogue, but couldn't be added to your profile: ${error.message}`);
+      }
+    } catch (error) {
+      setSkillMessage(error.message || "Unable to save this skill to the catalogue.");
+    } finally {
+      setAddingSkill(false);
+    }
+  };
 
   if (selectedCourse)
     return (
@@ -90,9 +152,9 @@ function DiscoverPage({
           <button className="offer-top" onClick={onOffer}>
             <Plus size={17} /> Offer a Skill
           </button>
-          <span className="nav-avatar" aria-label="Signed in as May">
-            M
-          </span>
+          <button className="nav-avatar" aria-label={`Open ${userName}'s profile`} onClick={onProfile}>
+            {getUserInitials(userName)}
+          </button>
         </div>
       </header>
       <section className="discover-content" aria-labelledby="discover-title">
@@ -142,15 +204,16 @@ function DiscoverPage({
         <div className="filter-line skill-filter">
           <span className="filter-label">SKILL</span>
           <div className="filter-chips">
-            {skills.map((item, index) => {
-              const SkillIcon = [
+            {availableSkills.map((item, index) => {
+              const skillIcons = [
                 Code2,
                 Sparkles,
                 Database,
                 Code2,
                 Pencil,
                 TrendingUp,
-              ][index];
+              ];
+              const SkillIcon = skillIcons[index % skillIcons.length];
               return (
                 <button
                   key={item}
@@ -163,8 +226,38 @@ function DiscoverPage({
                 </button>
               );
             })}
+            <button className="skill-chip add-discover-skill" onClick={() => { setAddSkillOpen(value => !value); setSkillMessage(""); }}>
+              <Plus size={15} /> Add skill
+            </button>
           </div>
         </div>
+        {addSkillOpen && (
+          <form className="discover-add-skill-form" onSubmit={submitNewSkill}>
+            <label>
+              Choose a skill from the catalogue
+              <select value={newSkillId} onChange={event => setNewSkillId(event.target.value)} required>
+                <option value="">Select a skill</option>
+                {skillCatalog.filter(item => !selectedSkillIds.has(item.skill_id)).map(item => <option value={item.skill_id} key={item.skill_id}>{item.skill_name}{item.category ? ` · ${item.category}` : ""}</option>)}
+              </select>
+            </label>
+            <label>
+              Add this as
+              <select value={activeSkillRole} onChange={event => setSkillRole(event.target.value)}>
+                {skillRoles.includes("learner") && <option value="learner">Learner · I want to learn</option>}
+                {skillRoles.includes("instructor") && <option value="instructor">Instructor · I can offer</option>}
+              </select>
+            </label>
+            <label>
+              Or create your own skill
+              <input value={newSkillName} onChange={event => setNewSkillName(event.target.value)} maxLength={60} placeholder="e.g. Data visualization" />
+            </label>
+            <button type="button" onClick={submitCustomSkill} disabled={addingSkill || newSkillName.trim().length < 2 || !skillRoles.includes(activeSkillRole)}>{addingSkill ? "Saving..." : "Create and add"}</button>
+            <button type="submit" disabled={addingSkill || !newSkillId || !skillRoles.includes(activeSkillRole)}>{addingSkill ? "Adding…" : "Add to profile"}</button>
+            {skillMessage && <p role="alert">{skillMessage}</p>}
+            {skillLoadError && <p role="alert">{skillLoadError}</p>}
+            {!skillLoadError && skillCatalog.length === 0 && <p>No skills are available in the catalogue yet.</p>}
+          </form>
+        )}
         <div className="discover-grid">
           {filtered.map((course) => {
             const Icon = course.icon;
@@ -240,6 +333,7 @@ function DiscoverPage({
           </article>
         </div>
       </section>
+      <DiscoverPosts user={user} sessionReady={sessionReady} startCoursePost={startCoursePost} onComposerOpened={onComposerOpened} onLogin={onLogin} onSignup={onSignup} />
     </main>
   );
 }

@@ -6,7 +6,9 @@ SkillSync is a student skill-sharing platform prototype. It brings course discov
 
 - Responsive Home, Discover, My Learning, My Teaching, Requests, Classrooms, Notifications, Profile, and Settings pages
 - Searchable course catalog with category and skill filters, course details, and join-request interactions
-- Teaching dashboard with course management and request actions
+- Supabase-backed post feed inside Discover, with private attachments, draft editing, publishing, archiving, and author-only post management
+- Instructor course announcements created as posts; structured course offerings await the course tables described as proposed in the database manual
+- Profile skill selections backed by the shared skill catalogue and role-gated `profile_skills`
 - Classroom overview, materials, meetings, and members views
 - Collapsible desktop sidebar and a hamburger navigation menu on tablet and mobile
 - Browser history navigation using hash routes, such as `#discover` and `#classroom`
@@ -40,9 +42,11 @@ Vite prints the local development URL in the terminal, usually `http://localhost
 src/
   app/
     pageRoutes.js          Hash route names and initial route parsing
+    userProfile.js         User display name and initials
   components/
     AppSidebar.jsx         Shared responsive navigation
     DashboardPreview.jsx   Home dashboard preview
+    DiscoverPosts.jsx      Authenticated post feed, drafts, publishing, and attachments
     Hero.jsx               Home hero section
     StatCard.jsx           Reusable dashboard card
   data/
@@ -61,6 +65,11 @@ src/
     RequestsPage.jsx
     SettingsPage.jsx
   App.jsx                  App state and page composition
+  lib/
+    supabase.js            Browser client using the publishable key
+    skillService.js        Skill catalogue and profile skill data access
+supabase/
+  20261022_post_attachment_limits.sql  Private bucket size and MIME restrictions
   index.css                Theme, page styles, and responsive rules
   main.jsx                 React entry point
   assets/                  Image and icon assets
@@ -74,9 +83,17 @@ Tailwind CSS utilities handle the shared shell layout and responsive spacing. `s
 
 ## Current implementation notes
 
-This repository contains the frontend prototype; it does not currently include an API server or database configuration. Course, classroom, profile, notification, and request data are sample data held in React state. Most changes reset when the page reloads; the sidebar collapsed preference is stored in browser local storage.
+The app connects to the existing Supabase project through `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. It expects the tables, row-level security policies, trigger, Storage bucket, and RPCs provisioned in `Skill_Sharing_Database_Developer_Manual-1.pdf`. Post reads are only issued after a user session is restored; Supabase RLS remains the data-access boundary.
 
-Login, account creation, password reset, Google/GitHub sign-in, classroom messaging, and some material or recording actions are not connected to services yet. The interface displays a message for unavailable actions. Connect these flows to an authentication provider and application API before using real accounts or data.
+Post attachments accept JPEG, PNG, WebP, PDF, and MP4 files from 1 through 10,485,760 bytes (10 MiB) each. The client checks the limit and the SQL in `supabase/20261022_post_attachment_limits.sql` configures the existing `post-attachments` bucket to enforce the private access model, MIME allowlist, and maximum size. Apply the SQL in the Supabase SQL Editor as a project administrator. The user's browser uses only the publishable key; never put an admin/service-role key in `.env`.
+
+Members can add or remove learner and instructor roles from Edit profile. Apply or rerun `supabase/20261022_allow_self_select_roles.sql` in the Supabase SQL Editor to permit signed-in users to change only their own roles. Removing a role keeps its saved skill selections so they return if the role is added back. Once the instructor role is active, the member can add offering skills and publish course announcements.
+
+Apply `supabase/20261024_allow_role_removal_with_existing_posts.sql` to allow role removal without deleting historical posts. The migration replaces the posts-to-role foreign key with a trigger that still requires the author to have that role when a new post is created.
+
+Members can create a skill from Discover or Edit profile. New skills are added to the shared `skills` catalogue and automatically selected for the chosen learner/instructor profile. Apply `supabase/20261023_allow_member_created_skills.sql` in the Supabase SQL Editor to allow authenticated inserts into that catalogue.
+
+The database manual marks course-offering/classroom tables as proposed, not installed. “Course announcement” posts are therefore stored in `posts`; structured enrollments, course skills, classrooms, and membership creation require those tables and their policies/RPCs to be provisioned first. Classroom and several dashboard sections still contain prototype data.
 
 The Outfit font is loaded from Google Fonts, with a system sans-serif fallback if it cannot be reached.
 

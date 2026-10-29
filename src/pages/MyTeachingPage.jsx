@@ -11,6 +11,7 @@ import {
   Hourglass,
   X,
 } from "lucide-react";
+import { getUserInitials } from "../app/userProfile.js";
 function MyTeachingPage({
   onBack,
   onDiscover,
@@ -20,8 +21,10 @@ function MyTeachingPage({
   onUpdateRequest,
   courses,
   setCourses,
+  userName,
+  onProfile,
+  onCreateCoursePost,
 }) {
-  const [createOpen, setCreateOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [manageCourse, setManageCourse] = useState(null);
   const pendingCount = courses.reduce(
@@ -35,29 +38,6 @@ function MyTeachingPage({
         ? `${request.name} was added to ${courseTitle}.`
         : `${request.name}'s request was declined.`,
     );
-  };
-  const createCourse = (event) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const title = String(form.get("title")).trim();
-    if (!title) return;
-    setCourses((current) => [
-      ...current,
-      {
-        title,
-        category: String(form.get("category")),
-        week: "Not published yet",
-        tone: "lavender",
-        icon: BookOpen,
-        learners: 0,
-        pending: 0,
-        rating: "—",
-        requests: [],
-        draftOnly: true,
-      },
-    ]);
-    setCreateOpen(false);
-    setNotice(`${title} was saved as a draft.`);
   };
   const saveCourseDetails = (event) => {
     event.preventDefault();
@@ -98,9 +78,9 @@ function MyTeachingPage({
           <button className="offer-top" onClick={onOffer}>
             <Plus size={17} /> Offer a Skill
           </button>
-          <span className="nav-avatar" aria-label="Signed in as May">
-            M
-          </span>
+          <button className="nav-avatar" aria-label={`Open ${userName}'s profile`} onClick={onProfile}>
+            {getUserInitials(userName)}
+          </button>
         </div>
       </header>
       <div className="teaching-content">
@@ -109,8 +89,8 @@ function MyTeachingPage({
             <p>INSTRUCTOR SPACE</p>
             <h1 id="teaching-title">My Teaching</h1>
           </div>
-          <button onClick={() => setCreateOpen(true)}>
-            <Plus size={21} /> Create a Course
+          <button onClick={onCreateCoursePost}>
+            <Plus size={21} /> Create a Course Post
           </button>
         </div>
         {notice && (
@@ -248,54 +228,6 @@ function MyTeachingPage({
           })}
         </section>
       </div>
-      {createOpen && (
-        <div
-          className="create-course-backdrop"
-          onClick={() => setCreateOpen(false)}
-        >
-          <section
-            className="create-course-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="create-course-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              className="modal-close"
-              onClick={() => setCreateOpen(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <p className="learner-eyebrow">SHARE WHAT YOU KNOW</p>
-            <h2 id="create-course-title">Create a course</h2>
-            <form onSubmit={createCourse}>
-              <label>
-                Course name
-                <input
-                  name="title"
-                  placeholder="e.g. Intro to TypeScript"
-                  required
-                />
-              </label>
-              <label>
-                Category
-                <select name="category">
-                  <option>Programming</option>
-                  <option>Web Development</option>
-                  <option>Data &amp; Databases</option>
-                  <option>AI / ML</option>
-                  <option>Design</option>
-                </select>
-              </label>
-              <button className="create-submit" type="submit">
-                Save as draft
-                <ArrowRight size={17} />
-              </button>
-            </form>
-          </section>
-        </div>
-      )}
       {manageCourse && (
         <div
           className="create-course-backdrop"
