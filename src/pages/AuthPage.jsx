@@ -22,6 +22,9 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [institution, setInstitution] = useState("");
+  const [bio, setBio] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [skills, setSkills] = useState("");
   const [roleChoice, setRoleChoice] = useState("learner");
   return (
     <main className={`auth-page ${isSignup ? "signup-mode" : "login-mode"}`}>
@@ -137,6 +140,9 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
                   fullName,
                   institution,
                   roleChoice,
+                  bio,
+                  dateOfBirth,
+                  skills,
                 });
                 if (result?.message) setMessage(result.message);
               } catch (error) {
@@ -171,6 +177,10 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
                   </span>
                 </label>
                 <label className="field-label">
+                  Date of birth
+                  <span className="input-wrap"><input value={dateOfBirth} onChange={event => setDateOfBirth(event.target.value)} type="date" autoComplete="bday" required /></span>
+                </label>
+                <label className="field-label">
                   I want to join as
                   <span className="input-wrap">
                     <UsersRound size={18} />
@@ -182,6 +192,12 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
                   </span>
                 </label>
               </div>
+              <label className="field-label">Skills
+                <span className="input-wrap"><input value={skills} onChange={event => setSkills(event.target.value)} placeholder="e.g. Python, UI design, public speaking" required /></span>
+              </label>
+              <label className="field-label">Bio
+                <textarea className="auth-bio-input" value={bio} onChange={event => setBio(event.target.value)} rows={3} maxLength={1000} placeholder="Tell the community a little about yourself" required />
+              </label>
               </>
             )}
             <label className="field-label">
@@ -234,14 +250,7 @@ function AuthPage({ mode, onModeChange, onBack, onAuthenticate }) {
                 </button>
               </span>
             </label>
-            {isSignup ? (
-              <>
-                <label className="remember-option terms-option">
-                  <input type="checkbox" required /> I agree to the community
-                  guidelines and privacy policy
-                </label>
-              </>
-            ) : (
+            {!isSignup && (
               <label className="remember-option keep-option">
                 <input type="checkbox" defaultChecked /> Keep me logged in
               </label>

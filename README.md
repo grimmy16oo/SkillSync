@@ -5,8 +5,10 @@ SkillSync is a student skill-sharing frontend with Supabase authentication, prof
 ## Features
 
 - Responsive Home, Discover, My Learning, My Teaching, Requests, Classrooms, and Profile pages
-- Discover lists database skills and chronological posts, plus clearly marked demo course cards; no search or category filters
+- Discover includes a search bar for featured demo courses and the signed-in member's own skill offers
 - Supabase-backed post feed inside Discover, ordered newest first by `created_at`, with private attachments, draft editing, publishing, archiving, and author-only post management
+- Signup collects name, institution, date of birth, roles, skills, and bio; role and skill choices are applied to the member's Supabase profile after authentication
+- Skill offer posts are instructor-only and include separate course and post titles, a description, related links, video uploads, and general attachments
 - My Teaching lists the signed-in user's instructor posts from `posts`
 - Profile skill selections backed by the shared skill catalogue and role-gated `profile_skills`
 - Learning, request, teaching, and classroom screens use clearly marked demo examples where live backend tables are unavailable
@@ -68,6 +70,9 @@ src/
     skillService.js        Skill catalogue and profile skill data access
 supabase/
   20261022_post_attachment_limits.sql  Private bucket size and MIME restrictions
+  20261101_instructor_only_posts.sql  Restrict post creation to instructor role
+  20261101_remove_post_attachment_limits.sql  Remove bucket MIME and object-size restrictions
+  20261101_profile_date_of_birth.sql  Add a profile date-of-birth field
   index.css                Theme, page styles, and responsive rules
   main.jsx                 React entry point
   assets/                  Image and icon assets
@@ -85,7 +90,9 @@ The app connects to the existing Supabase project through `VITE_SUPABASE_URL` an
 
 The frontend currently queries `profiles` (`user_id`, `full_name`, `institution`, `bio`), `user_roles` (`user_id`, `role`), `skills` (`skill_id`, `skill_name`, `category`), `profile_skills` (`user_id`, `skill_id`, `skill_type`), and `posts` (`post_id`, `user_id`, `posting_role`, `description`, `status`, `created_at`). Post attachment UI also uses `attachment_id`, `post_id`, `original_name`, `byte_size`, `bucket_id`, and `object_path`, with files stored in Supabase Storage. These names are taken from current queries; base table DDL is not checked into this repository, so column types and all constraints must be verified in the deployed database.
 
-Post attachments accept JPEG, PNG, WebP, PDF, and MP4 files from 1 through 10,485,760 bytes (10 MiB) each. The client checks the limit and the SQL in `supabase/20261022_post_attachment_limits.sql` configures the existing `post-attachments` bucket to enforce the private access model, MIME allowlist, and maximum size. Apply the SQL in the Supabase SQL Editor as a project administrator. The user's browser uses only the publishable key; never put an admin/service-role key in `.env`.
+Post attachment uploads apply no client-side file-type or per-file size restriction. The migration `supabase/20261101_remove_post_attachment_limits.sql` removes the bucket MIME and object-size restrictions configured by the older `supabase/20261022_post_attachment_limits.sql`; Supabase project or plan limits can still apply. Apply the new migration in the Supabase SQL Editor as a project administrator. Apply `supabase/20261101_instructor_only_posts.sql` as well so the database enforces instructor-only post creation. The user's browser uses only the publishable key; never put an admin/service-role key in `.env`.
+
+Apply `supabase/20261101_profile_date_of_birth.sql` before using the signup date-of-birth field. Signup temporarily carries the date in Auth metadata and moves it to `profiles.date_of_birth` after a session becomes available, then clears the temporary metadata value. The initial roles and comma-separated skills are applied to `user_roles`, `skills`, and `profile_skills` after a session becomes available. If email confirmation is enabled, this happens after the user confirms and signs in. Confirm the live database's RLS policies allow these self-service operations.
 
 Members can add or remove learner and instructor roles from Edit profile. Apply or rerun `supabase/20261022_allow_self_select_roles.sql` in the Supabase SQL Editor to permit signed-in users to change only their own roles. Removing a role keeps its saved skill selections so they return if the role is added back.
 

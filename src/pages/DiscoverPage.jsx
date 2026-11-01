@@ -1,4 +1,5 @@
-import { Plus } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { getUserInitials } from '../app/userProfile.js'
 import DiscoverPosts from '../components/DiscoverPosts.jsx'
 import { courses } from '../data/demoData.jsx'
@@ -7,10 +8,14 @@ function DiscoverPage({
   user, sessionReady, startPost, startPostRole, onComposerOpened, onLogin, onSignup,
   onBack, onOffer, onLearning, onTeaching, onRequests, userName, onProfile,
 }) {
+  const [searchQuery, setSearchQuery] = useState('')
   const topRating = Math.max(...courses.map(course => Number(course.rating)))
-  const featuredCourses = [...courses]
-    .sort((left, right) => Number(right.rating) - Number(left.rating))
-    .slice(0, 3)
+  const featuredCourses = useMemo(() => {
+    const ranked = [...courses].sort((left, right) => Number(right.rating) - Number(left.rating))
+    const matching = ranked.filter(course => `${course.title} ${course.category} ${course.description} ${course.teacher} ${course.skills.join(' ')}`
+      .toLocaleLowerCase().includes(searchQuery.trim().toLocaleLowerCase()))
+    return searchQuery.trim() ? matching : matching.slice(0, 3)
+  }, [searchQuery])
 
   return (
     <main className="discover-page">
@@ -31,6 +36,18 @@ function DiscoverPage({
         <div className="discover-heading">
           <div><h1 id="discover-title">Discover Skills</h1></div>
         </div>
+        <label className="discover-search" htmlFor="discover-search-input">
+          <Search size={19} aria-hidden="true" />
+          <input
+            id="discover-search-input"
+            type="search"
+            value={searchQuery}
+            onChange={event => setSearchQuery(event.target.value)}
+            placeholder="Search skills, courses, instructors, or posts"
+            aria-label="Search skills, courses, instructors, or posts"
+          />
+          {searchQuery && <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search"><X size={17} /></button>}
+        </label>
         <div className="discover-grid demo-course-grid" aria-label="Featured courses">
           {featuredCourses.map(course => {
             const Icon = course.icon
@@ -41,9 +58,10 @@ function DiscoverPage({
               <div className="course-teacher"><span className="teacher-avatar">{course.initials}</span><span>{course.teacher}</span><span className="course-rating" aria-label={`${course.rating} out of 5 stars`}>★ {course.rating}</span></div>
             </article>
           })}
+          {!featuredCourses.length && <p className="discover-search-empty">No featured courses match “{searchQuery}”.</p>}
         </div>
       </section>
-      <DiscoverPosts user={user} sessionReady={sessionReady} startPost={startPost} startPostRole={startPostRole} onComposerOpened={onComposerOpened} onLogin={onLogin} onSignup={onSignup} />
+      <DiscoverPosts searchQuery={searchQuery} user={user} sessionReady={sessionReady} startPost={startPost} startPostRole={startPostRole} onComposerOpened={onComposerOpened} onLogin={onLogin} onSignup={onSignup} />
     </main>
   )
 }

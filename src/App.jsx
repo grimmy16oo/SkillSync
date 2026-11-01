@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import AppLayout from './layouts/AppLayout.jsx'
 import HomePage from './pages/HomePage.jsx'
 import AuthPage from './pages/AuthPage.jsx'
@@ -24,6 +24,7 @@ function App() {
   const [profileLoadError, setProfileLoadError] = useState('')
   const [startPost, setStartPost] = useState(false)
   const [startPostRole, setStartPostRole] = useState('')
+  const onboardingSynced = useRef(new Set())
 
   useEffect(() => {
     if (!supabase) {
@@ -71,9 +72,59 @@ function App() {
   }, [user?.id])
 
   useEffect(() => {
+    if (!user?.id || !supabase || onboardingSynced.current.has(user.id)) return undefined
+    const metadata = user.user_metadata || {}
+    if (!metadata.role_choice && !metadata.skills?.length) return undefined
+    let active = true
+    const syncSignupChoices = async () => {
+      try {
+        let current = await loadSkillData(user.id)
+        const wantedRoles = metadata.role_choice === 'both'
+          ? ['learner', 'instructor']
+          : metadata.role_choice ? [metadata.role_choice] : []
+        for (const role of wantedRoles) {
+          if (!current.roles.includes(role)) {
+            const { error } = await supabase.from('user_roles').insert({ user_id: user.id, role })
+            if (error && error.code !== '23505') throw error
+          }
+        }
+        current = await loadSkillData(user.id)
+        const skillTypes = metadata.role_choice === 'instructor'
+          ? ['offering']
+          : metadata.role_choice === 'both' ? ['learning', 'offering'] : ['learning']
+        for (const skillName of metadata.skills || []) {
+          const skill = await createCatalogSkill(skillName)
+          for (const skillType of skillTypes) {
+            if (!current.profileSkills.some(item => item.skill_id === skill.skill_id && item.skill_type === skillType)) {
+              await insertProfileSkill(user.id, skill.skill_id, skillType)
+            }
+          }
+        }
+        if (metadata.date_of_birth) {
+          const { error } = await supabase.from('profiles').update({ date_of_birth: metadata.date_of_birth }).eq('user_id', user.id)
+          if (error) throw error
+        }
+        current = await loadSkillData(user.id)
+        if (active) {
+          setSkillData(current)
+          onboardingSynced.current.add(user.id)
+          if (metadata.date_of_birth) {
+            const { error } = await supabase.auth.updateUser({ data: { ...metadata, date_of_birth: null } })
+            if (error) console.error('Unable to clear temporary signup date metadata:', error.message)
+          }
+        }
+      } catch (error) {
+        console.error('Unable to apply signup profile choices:', error.message)
+      }
+    }
+    syncSignupChoices()
+    return () => { active = false }
+  }, [user])
+
+  useEffect(() => {
     if (!user?.id || !supabase) return undefined
     let alive = true
-    supabase.from('profiles').select('user_id,full_name,institution,bio').eq('user_id', user.id).maybeSingle()
+    supabase.from('profiles').select('user_id,full_name,institution,bio,date_of_birth').eq('user_id', user.id).maybeSingle()
       .then(({ data, error }) => {
         if (!alive) return
         if (error) setProfileLoadError(error.message)
@@ -82,13 +133,20 @@ function App() {
     return () => { alive = false }
   }, [user?.id])
 
-  const authenticate = async ({ mode, email, password, fullName, institution, roleChoice }) => {
+  const authenticate = async ({ mode, email, password, fullName, institution, roleChoice, bio, dateOfBirth, skills }) => {
     if (!supabase) throw new Error('Sign-in is temporarily unavailable. Please try again later.')
     const response = mode === 'signup'
       ? await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName, institution, role_choice: roleChoice } },
+          options: { data: {
+            full_name: fullName,
+            institution,
+            role_choice: roleChoice,
+            bio,
+            date_of_birth: dateOfBirth,
+            skills: [...new Map(skills.split(',').map(skill => skill.trim()).filter(Boolean).map(skill => [skill.toLocaleLowerCase(), skill])).values()],
+          } },
         })
       : await supabase.auth.signInWithPassword({ email, password })
     if (response.error) throw response.error
@@ -114,9 +172,10 @@ function App() {
       full_name: profile.name,
       institution: profile.institution,
       bio: profile.bio,
+      date_of_birth: profile.dateOfBirth,
     }).eq('user_id', user.id)
     if (profileError) throw profileError
-    setProfileData({ user_id: user.id, full_name: profile.name, institution: profile.institution, bio: profile.bio })
+    setProfileData({ user_id: user.id, full_name: profile.name, institution: profile.institution, bio: profile.bio, date_of_birth: profile.dateOfBirth })
     const { data, error } = await supabase.auth.updateUser({
       data: {
         ...user.user_metadata,

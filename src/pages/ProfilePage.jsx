@@ -21,6 +21,7 @@ function ProfilePage({ user, profileData, profileLoadError, skillCatalog, profil
     name: profileData?.full_name || metadata.full_name || metadata.name || user?.email?.split("@")[0] || "Student",
     institution: profileData?.institution || metadata.institution || "",
     bio: profileData?.bio || metadata.bio || "",
+    dateOfBirth: profileData?.date_of_birth || "",
   };
   const [saving, setSaving] = useState(false);
   const submitProfile = async (event) => {
@@ -31,6 +32,7 @@ function ProfilePage({ user, profileData, profileLoadError, skillCatalog, profil
       name: String(form.get("name")),
       institution: String(form.get("institution")),
       bio: String(form.get("bio")),
+      dateOfBirth: String(form.get("date_of_birth")),
     };
     setSaving(true);
     setSaveError("");
@@ -143,6 +145,7 @@ function ProfilePage({ user, profileData, profileLoadError, skillCatalog, profil
                 <input name="name" defaultValue={profile.name} required />
               </label>
               <label>Institution<input name="institution" defaultValue={profile.institution} /></label>
+              <label>Date of birth<input name="date_of_birth" type="date" defaultValue={profile.dateOfBirth} /></label>
               {skillLoadError && <p className="posts-error" role="alert">{skillLoadError}</p>}
               <RoleSelection roles={skillRoles} onAddRole={onAddRole} onRemoveRole={onRemoveRole} />
               <SkillSelection title="Instructor · Skills I can offer" role="instructor" catalog={skillCatalog} selected={offeringSkills} enabled={skillRoles.includes("instructor")} onChange={onChangeSkill} onCreateSkill={onCreateSkill} />
