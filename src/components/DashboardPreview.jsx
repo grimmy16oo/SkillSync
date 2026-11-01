@@ -27,22 +27,22 @@ function DashboardPreview({ onExplore, onOffer, onClassroom }) {
       </div>
       <div className="card-grid">
         <StatCard className="learning-card" label="My Learning" icon={BookOpen}>
-          <div className="main-stat"><strong>Courses</strong><span>Enrollment data requires the course and request tables.</span></div>
+          <div className="main-stat"><strong>Courses</strong><span>Pick up where you left off.</span></div>
           <button type="button" onClick={onExplore} className="join-button">Browse posts<ArrowRight size={16} /></button>
         </StatCard>
         <StatCard className="skills-card" label="Skills" icon={Sparkles}>
-          <div className="main-stat"><strong>Skills catalogue</strong><span>Skill names and categories are stored in SKILL.</span></div>
+          <div className="main-stat"><strong>Skills catalogue</strong><span>Explore skills shared by the community.</span></div>
           <div className="skill-group"><span className="skill-caption">Choose learner or instructor skills from your profile.</span></div>
         </StatCard>
         <StatCard className="teaching-card" label="My Teaching" icon={GraduationCap}>
           <div className="main-stat"><strong>Instructor posts</strong><span>Posts are available in Discover.</span></div>
-          <button type="button" onClick={onOffer} className="join-button">Create a post<ArrowRight size={16} /></button>
+          <button type="button" onClick={onOffer} className="join-button">Offer a Skill<ArrowRight size={16} /></button>
         </StatCard>
         <StatCard className="requests-card" label="Requests" icon={Layers3}>
-          <div className="main-stat"><strong>Interest requests</strong><span>Request history needs INTEREST_REQUEST support.</span></div>
+          <div className="main-stat"><strong>Incoming and sent</strong><span>Review your requests and their latest status.</span></div>
         </StatCard>
         <StatCard className="upcoming-card" label="Classrooms" icon={CalendarDays}>
-          <div className="main-stat"><strong>Meetings and materials</strong><span>Classroom features need their backend tables.</span></div>
+          <div className="main-stat"><strong>Meetings and materials</strong><span>Open your course space to continue learning.</span></div>
           <button type="button" onClick={onClassroom} className="join-button">Open classrooms<ArrowRight size={16} /></button>
         </StatCard>
         <StatCard className="achievements-card" label="Profile" icon={Sparkles}>

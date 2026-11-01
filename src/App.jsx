@@ -83,7 +83,7 @@ function App() {
   }, [user?.id])
 
   const authenticate = async ({ mode, email, password, fullName, institution, roleChoice }) => {
-    if (!supabase) throw new Error('Supabase is not configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env, then restart Vite.')
+    if (!supabase) throw new Error('Sign-in is temporarily unavailable. Please try again later.')
     const response = mode === 'signup'
       ? await supabase.auth.signUp({
           email,
@@ -171,7 +171,7 @@ function App() {
       throw new Error("You can't remove this role while you have existing posts using it.")
     }
     if (error) throw error
-    if (!data) throw new Error('No role was removed. Rerun the updated role SQL migration in Supabase, then try again.')
+    if (!data) throw new Error('No role was removed. Please try again later.')
     setSkillData(current => ({ ...current, roles: current.roles.filter(item => item !== role) }))
   }
 
@@ -189,20 +189,26 @@ function App() {
   }, [])
   useEffect(() => { window.scrollTo(0, 0) }, [page, authMode])
 
+  const openOfferForm = () => {
+    setStartPost(true)
+    setStartPostRole('instructor')
+    setPage('discover')
+  }
+
   if (authMode) return <AuthPage mode={authMode} onModeChange={setAuthMode} onBack={() => setAuthMode(null)} onAuthenticate={authenticate} />
-  if (page === 'home') return <HomePage onAuth={setAuthMode} onExplore={() => setPage('discover')} onOffer={() => setPage('teaching')} onClassroom={() => setPage('classroom')} />
+  if (page === 'home') return <HomePage onAuth={setAuthMode} onExplore={() => setPage('discover')} onOffer={openOfferForm} onClassroom={() => setPage('classroom')} />
 
   const pageContent = page === 'discover'
-    ? <DiscoverPage user={user} sessionReady={sessionReady} startPost={startPost} startPostRole={startPostRole} onComposerOpened={() => { setStartPost(false); setStartPostRole('') }} onLogin={() => setAuthMode('login')} onSignup={() => setAuthMode('signup')} userName={getUserName(user)} skillCatalog={skillData.catalog} profileSkills={skillData.profileSkills} skillRoles={skillData.roles} skillLoadError={skillLoadError} onCreateSkill={createProfileSkill} onAddSkill={(skillId, role) => changeProfileSkill(skillId, role, 'add')} onProfile={() => setPage('profile')} onBack={() => setPage('home')} onOffer={() => setPage('teaching')} onLearning={() => setPage('learning')} onTeaching={() => setPage('teaching')} onRequests={() => setPage('requests')} />
+    ? <DiscoverPage user={user} sessionReady={sessionReady} startPost={startPost} startPostRole={startPostRole} onComposerOpened={() => { setStartPost(false); setStartPostRole('') }} onLogin={() => setAuthMode('login')} onSignup={() => setAuthMode('signup')} userName={getUserName(user)} skillCatalog={skillData.catalog} profileSkills={skillData.profileSkills} skillRoles={skillData.roles} skillLoadError={skillLoadError} onCreateSkill={createProfileSkill} onAddSkill={(skillId, role) => changeProfileSkill(skillId, role, 'add')} onProfile={() => setPage('profile')} onBack={() => setPage('home')} onOffer={openOfferForm} onLearning={() => setPage('learning')} onTeaching={() => setPage('teaching')} onRequests={() => setPage('requests')} />
     : page === 'learning'
       ? <MyLearningPage userName={getUserName(user)} onProfile={() => setPage('profile')} onBack={() => setPage('home')} onDiscover={() => setPage('discover')} onOffer={() => setPage('teaching')} onTeaching={() => setPage('teaching')} onRequests={() => setPage('requests')} onClassroom={() => setPage('classroom')} />
       : page === 'teaching'
-        ? <MyTeachingPage user={user} userName={getUserName(user)} onProfile={() => setPage('profile')} onCreatePost={() => { setStartPost(true); setStartPostRole('instructor'); setPage('discover') }} onBack={() => setPage('home')} onDiscover={() => setPage('discover')} onLearning={() => setPage('learning')} onOffer={() => setPage('teaching')} onRequests={() => setPage('requests')} />
+        ? <MyTeachingPage user={user} userName={getUserName(user)} onProfile={() => setPage('profile')} onCreatePost={openOfferForm} onBack={() => setPage('home')} onDiscover={() => setPage('discover')} onLearning={() => setPage('learning')} onOffer={openOfferForm} onRequests={() => setPage('requests')} />
         : page === 'requests'
-          ? <RequestsPage userName={getUserName(user)} onHome={() => setPage('home')} onDiscover={() => setPage('discover')} onLearning={() => setPage('learning')} onTeaching={() => setPage('teaching')} onProfile={() => setPage('profile')} onOffer={() => setPage('teaching')} />
+          ? <RequestsPage userName={getUserName(user)} onHome={() => setPage('home')} onDiscover={() => setPage('discover')} onLearning={() => setPage('learning')} onTeaching={() => setPage('teaching')} onProfile={() => setPage('profile')} onOffer={openOfferForm} />
           : page === 'classroom'
             ? <ClassroomPage onBack={() => setPage('learning')} />
-            : <ProfilePage user={user} profileData={profileData} profileLoadError={profileLoadError} skillCatalog={skillData.catalog} profileSkills={skillData.profileSkills} skillRoles={skillData.roles} skillLoadError={skillLoadError} onChangeSkill={changeProfileSkill} onCreateSkill={createProfileSkill} onAddRole={addProfileRole} onRemoveRole={removeProfileRole} onSaveProfile={saveUserProfile} onBack={() => setPage('home')} onOffer={() => setPage('teaching')} />
+            : <ProfilePage user={user} profileData={profileData} profileLoadError={profileLoadError} skillCatalog={skillData.catalog} profileSkills={skillData.profileSkills} skillRoles={skillData.roles} skillLoadError={skillLoadError} onChangeSkill={changeProfileSkill} onCreateSkill={createProfileSkill} onAddRole={addProfileRole} onRemoveRole={removeProfileRole} onSaveProfile={saveUserProfile} onBack={() => setPage('home')} onOffer={openOfferForm} onRequests={() => setPage('requests')} />
 
   return <AppLayout page={page} user={user} onLogout={logout} onNavigate={setPage}>{pageContent}</AppLayout>
 }

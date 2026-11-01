@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 
-function ProfilePage({ user, profileData, profileLoadError, skillCatalog, profileSkills, skillRoles, skillLoadError, onChangeSkill, onCreateSkill, onAddRole, onRemoveRole, onSaveProfile, onBack, onOffer }) {
+function ProfilePage({ user, profileData, profileLoadError, skillCatalog, profileSkills, skillRoles, skillLoadError, onChangeSkill, onCreateSkill, onAddRole, onRemoveRole, onSaveProfile, onBack, onOffer, onRequests }) {
   const [editOpen, setEditOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -74,6 +74,7 @@ function ProfilePage({ user, profileData, profileLoadError, skillCatalog, profil
               <span>
                 <RefreshCw size={13} />{skillRoles.map(role => role === "instructor" ? "Instructor" : "Learner").join(" & ") || "Member"}
               </span>
+              <button type="button" className="profile-requests-tag" onClick={onRequests}>Requests</button>
             </div>
             <p className="profile-school"><Building2 size={17} /> {profile.institution || "Institution not added"}</p><p className="profile-school">{user?.email}</p>
             <p className="profile-bio">{profile.bio || "Add a short introduction about yourself."}</p>

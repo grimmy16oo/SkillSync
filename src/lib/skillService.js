@@ -22,7 +22,7 @@ export async function loadSkillData(userId) {
 }
 
 export async function addProfileSkill(userId, skillId, skillType) {
-  if (!supabase) throw new Error("Supabase is not configured.");
+  if (!supabase) throw new Error("Skills are temporarily unavailable. Please try again later.");
   const { error } = await supabase.from("profile_skills").insert({
     user_id: userId,
     skill_id: skillId,
@@ -32,7 +32,7 @@ export async function addProfileSkill(userId, skillId, skillType) {
 }
 
 export async function createCatalogSkill(skillName) {
-  if (!supabase) throw new Error("Supabase is not configured.");
+  if (!supabase) throw new Error("Skills are temporarily unavailable. Please try again later.");
   const name = skillName.trim().replace(/\s+/g, " ");
   if (name.length < 2 || name.length > 60) throw new Error("Skill names must be 2 to 60 characters.");
 
@@ -63,7 +63,7 @@ export async function createCatalogSkill(skillName) {
 }
 
 export async function removeProfileSkill(userId, skillId, skillType) {
-  if (!supabase) throw new Error("Supabase is not configured.");
+  if (!supabase) throw new Error("Skills are temporarily unavailable. Please try again later.");
   const { error } = await supabase.from("profile_skills")
     .delete()
     .eq("user_id", userId)

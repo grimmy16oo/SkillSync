@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Archive, ArrowDownToLine, FileText, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { AlertCircle, Archive, ArrowDownToLine, FileText, Plus, Save, Send, Trash2, Upload, UserRound, X } from "lucide-react";
 import { supabase } from "../lib/supabase.js";
 import { getUserInitials, getUserName } from "../app/userProfile.js";
 
@@ -44,7 +44,6 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
   const [attachments, setAttachments] = useState([]);
   const [profiles, setProfiles] = useState({});
   const [roles, setRoles] = useState([]);
-  const [tab, setTab] = useState("feed");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -52,13 +51,17 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
   const [editingPostId, setEditingPostId] = useState(null);
   const [postingRole, setPostingRole] = useState(startPostRole || "");
   const [description, setDescription] = useState("");
+  const [certificationContent, setCertificationContent] = useState("");
+  const [relatedLinks, setRelatedLinks] = useState("");
   const [files, setFiles] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [interestedPostIds, setInterestedPostIds] = useState(() => new Set());
+  const [profilePreview, setProfilePreview] = useState(null);
 
   const loadPosts = useCallback(async () => {
     if (!user || !supabase) return;
     const postsQuery = supabase.from("posts").select("*")
-      .eq(tab === "mine" ? "user_id" : "status", tab === "mine" ? user.id : "published")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     const [roleResult, postResult] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", user.id),
@@ -88,7 +91,7 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
     if (profileResult.error) setError(`Posts loaded, but author names couldn't be loaded: ${profileResult.error.message}`);
     setProfiles(Object.fromEntries((profileResult.data || []).map(profile => [profile.user_id, profile])));
     setLoading(false);
-  }, [user, tab]);
+  }, [user]);
 
   useEffect(() => {
     if (!sessionReady || !user) return undefined;
@@ -97,19 +100,24 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
     return () => { active = false; };
   }, [sessionReady, user, loadPosts]);
 
-  const visiblePosts = useMemo(() => tab === "mine"
-    ? posts.filter(post => post.user_id === user?.id)
-    : posts.filter(post => post.status === "published"), [posts, tab, user]);
+  const visiblePosts = posts.filter(post => post.user_id === user?.id);
 
   const beginCreate = () => {
     setEditingPostId(null);
     setPostingRole(roles.includes("learner") ? "learner" : "instructor");
-    setDescription(""); setFiles([]); setError(""); setNotice(""); setEditorOpen(true);
+    setDescription(""); setCertificationContent(""); setRelatedLinks(""); setFiles([]); setError(""); setNotice(""); setEditorOpen(true);
   };
 
   const beginEdit = post => {
     setEditingPostId(post.post_id);
-    setDescription(post.description);
+    const certificationMatch = post.description.match(/\n\nCertification\/content: ([\s\S]*?)(?=\n\nRelated links: |$)/);
+    const linksMatch = post.description.match(/\n\nRelated links: ([\s\S]*)$/);
+    let cleanDescription = post.description;
+    if (certificationMatch) cleanDescription = cleanDescription.replace(certificationMatch[0], '');
+    if (linksMatch) cleanDescription = cleanDescription.replace(linksMatch[0], '');
+    setDescription(cleanDescription);
+    setCertificationContent(certificationMatch?.[1] || '');
+    setRelatedLinks(linksMatch?.[1] || '');
     setPostingRole(post.posting_role);
     setFiles([]); setError(""); setNotice(""); setEditorOpen(true);
   };
@@ -145,7 +153,7 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
       if (!user || !supabase) throw new Error("Sign in before creating a post.");
       const role = postingRole;
       if (!roles.includes(role)) throw new Error(`Your account doesn't have the ${role} role. Ask an administrator to assign it before posting.`);
-      const postDescription = description.trim();
+      const postDescription = [description.trim(), certificationContent.trim() && `Certification/content: ${certificationContent.trim()}`, relatedLinks.trim() && `Related links: ${relatedLinks.trim()}`].filter(Boolean).join('\n\n');
       if (!postDescription) throw new Error("Add a description before saving.");
       let postId = editingPostId;
       if (postId) {
@@ -260,18 +268,14 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
   return (
     <section className="posts-page discover-posts">
       <header className="posts-heading">
-        <div><p>SKILL SHARING</p><h1>Posts</h1><span>Newest posts from the SkillSync community</span></div>
-        <button className="posts-create-button" onClick={beginCreate}><Plus size={18} /> Create post</button>
+        <div><p>SKILL SHARING</p><h1>My Skill Offers</h1></div>
+        <button className="posts-create-button" onClick={beginCreate}><Plus size={18} /> Offer a Skill</button>
       </header>
       {notice && <p className="posts-notice" role="status">{notice}</p>}
       {error && <p className="posts-error" role="alert"><AlertCircle size={16} />{error}</p>}
-      <div className="posts-tabs" role="tablist" aria-label="Post list">
-        <button role="tab" aria-selected={tab === "feed"} onClick={() => setTab("feed")}>Community feed <span>{tab === "feed" ? visiblePosts.length : posts.filter(post => post.status === "published").length}</span></button>
-        <button role="tab" aria-selected={tab === "mine"} onClick={() => setTab("mine")}>My posts <span>{tab === "mine" ? visiblePosts.length : posts.filter(post => post.user_id === user.id).length}</span></button>
-      </div>
-      {loading ? <section className="posts-skeleton-list" aria-label="Loading posts" aria-busy="true">{[0, 1, 2].map(item => <div className="posts-skeleton-card" key={item}><span /><div><i /><i /><i /></div></div>)}</section> : visiblePosts.length === 0 ? (
-        <section className="posts-empty"><span className="posts-empty-icon"><FileText size={25} /></span><h2>{tab === "mine" ? "Your post space is ready" : "The feed is ready for its first post"}</h2><p>{tab === "mine" ? "Drafts and posts you publish will be collected here." : "Published posts from the community will appear here, newest first."}</p>{tab === "mine" && <button onClick={beginCreate}><Plus size={16} /> Create your first post</button>}</section>      ) : (
-        <section className="posts-list" aria-label={tab === "mine" ? "My posts" : "Published posts"}>
+      {loading ? <section className="posts-skeleton-list" aria-label="Loading skill offers" aria-busy="true">{[0, 1, 2].map(item => <div className="posts-skeleton-card" key={item}><span /><div><i /><i /><i /></div></div>)}</section> : visiblePosts.length === 0 ? (
+        <section className="posts-empty"><span className="posts-empty-icon"><FileText size={25} /></span><h2>Your skill offers will appear here</h2><p>Share a skill or course to get started.</p><button onClick={beginCreate}><Plus size={16} /> Offer a Skill</button></section>      ) : (
+        <section className="posts-list" aria-label="My skill offers">
           {visiblePosts.map(post => {
             const author = profiles[post.user_id];
             const attached = attachmentFor(post.post_id);
@@ -283,11 +287,12 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
             const postBody = postTitle ? descriptionLines.slice(titleLineIndex + 1).join('\n').trim() : post.description;
             return (
               <article className="skill-post-card" key={post.post_id}>
-                <header><div><strong>{author?.full_name || (own ? getUserName(user) : "SkillSync member")}</strong><span>{author?.institution || ""}</span></div><div className="posts-meta"><span>{post.posting_role}</span><span className={`post-status status-${post.status}`}>{post.status}</span><time>{new Date(post.created_at).toLocaleDateString()}</time></div></header>
+                <header><div><button className="post-author-link" type="button" onClick={() => setProfilePreview({ name: author?.full_name || (own ? getUserName(user) : "SkillSync member"), institution: author?.institution || "Institution not added", role: post.posting_role, userId: post.user_id })}>{author?.full_name || (own ? getUserName(user) : "SkillSync member")}</button><span>{author?.institution || ""}</span></div><div className="posts-meta"><span>{post.posting_role}</span>{post.status !== "published" && <span className={`post-status status-${post.status}`}>{post.status}</span>}<time>{new Date(post.created_at).toLocaleDateString()}</time></div></header>
                 {courseMatch && <span className="post-course-chip">Course · {courseMatch[1].trim()}</span>}
                 {postTitle && <h2 className="skill-post-title">{postTitle}</h2>}
                 {postBody && <p className="skill-post-description">{postBody}</p>}
                 {attached.length > 0 && <ul className="post-attachments">{attached.map(file => <li key={file.attachment_id}><FileText size={19} className="post-attachment-icon" /><span title={file.original_name}><strong>{file.original_name}</strong><small>{(file.byte_size / (1024 * 1024)).toFixed(2)} MiB</small></span><button onClick={() => downloadAttachment(file)} aria-label={`Download ${file.original_name}`}><ArrowDownToLine size={17} /></button>{own && post.status === "draft" && <button onClick={() => removeAttachment(file)} aria-label={`Remove ${file.original_name}`}><X size={16} /></button>}</li>)}</ul>}
+                {post.status === "published" && !own && <footer><button type="button" className={interestedPostIds.has(post.post_id) ? "interest-sent" : ""} onClick={() => setInterestedPostIds(current => { const next = new Set(current); if (next.has(post.post_id)) next.delete(post.post_id); else next.add(post.post_id); return next; })}><Send size={15} />{interestedPostIds.has(post.post_id) ? "Request sent" : "Interested"}</button></footer>}
                 {own && <footer>{post.status === "draft" && <><button onClick={() => beginEdit(post)}>Edit draft</button><button onClick={() => deleteDraft(post)} disabled={attached.length > 0}><Trash2 size={15} /> Delete empty draft</button><button onClick={() => changeStatus(post, "published")}>Publish</button></>}{post.status === "published" && <button onClick={() => changeStatus(post, "archived")}><Archive size={15} /> Archive</button>}</footer>}
               </article>
             );
@@ -297,10 +302,11 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
 
       {editorOpen && <div className="posts-modal-backdrop" onClick={() => !saving && setEditorOpen(false)}><section className="posts-modal" role="dialog" aria-modal="true" aria-labelledby="posts-editor-title" onClick={event => event.stopPropagation()}>
         <button className="posts-modal-close" onClick={() => !saving && setEditorOpen(false)} aria-label="Close"><X size={19} /></button>
-        <p>SHARE WHAT YOU KNOW</p><h2 id="posts-editor-title">{editingPostId ? "Edit draft" : "Create a post"}</h2>
+        <p>SHARE WHAT YOU KNOW</p><h2 id="posts-editor-title">{editingPostId ? "Edit draft" : "Offer a Skill"}</h2>
         <form onSubmit={savePost}>
           {!editingPostId && <label>Post as<select value={postingRole} onChange={event => setPostingRole(event.target.value)} required>{assignedRoles.map(role => <option key={role} value={role}>{role === "instructor" ? "Instructor" : "Learner"}</option>)}</select></label>}
           <label>Description<textarea value={description} onChange={event => setDescription(event.target.value)} rows={6} maxLength={10000} required placeholder="Describe the skill, learning goal, or course…" /></label>
+          {postingRole === "instructor" && <><label>Certification / course content<input value={certificationContent} onChange={event => setCertificationContent(event.target.value)} maxLength={1000} placeholder="Relevant certification or course outline" /></label><label>Related links<textarea value={relatedLinks} onChange={event => setRelatedLinks(event.target.value)} rows={2} maxLength={2000} placeholder="Add course, portfolio, or resource links" /></label></>}
           <label className="posts-file-picker"><Upload size={18} /> Attach files<input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,.jpg,.jpeg,.png,.webp,.pdf,.mp4" onChange={handleFiles} /><small>JPEG, PNG, WebP, PDF, or MP4. Each file must be 1–10,485,760 bytes (10 MiB).</small></label>
           {files.length > 0 && <ul className="posts-selected-files">{files.map((file, index) => <li key={`${file.name}-${file.lastModified}-${index}`}>{file.name} · {file.size.toLocaleString()} bytes<button type="button" onClick={() => setFiles(current => current.filter((_, i) => i !== index))} aria-label={`Remove ${file.name}`}><X size={14} /></button></li>)}</ul>}
           {editingPostId && attachmentFor(editingPostId).length > 0 && <p className="posts-file-note">Remove current draft attachments from the post card before replacing them.</p>}
@@ -308,6 +314,7 @@ function DiscoverPosts({ user, sessionReady, startPost, startPostRole, onCompose
           {error && <p className="posts-error" role="alert">{error}</p>}
         </form>
       </section></div>}
+      {profilePreview && <div className="posts-modal-backdrop" onClick={() => setProfilePreview(null)}><section className="posts-modal author-profile-preview" role="dialog" aria-modal="true" aria-labelledby="author-preview-title" onClick={event => event.stopPropagation()}><button className="posts-modal-close" onClick={() => setProfilePreview(null)} aria-label="Close"><X size={19} /></button><span className="author-preview-avatar"><UserRound size={30} /></span><p>COMMUNITY PROFILE</p><h2 id="author-preview-title">{profilePreview.name}</h2><div className="author-preview-tags"><span>{profilePreview.role}</span><span>Requests</span></div><p>{profilePreview.institution}</p></section></div>}
     </section>
   );
 }
